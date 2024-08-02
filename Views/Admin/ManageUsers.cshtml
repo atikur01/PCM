@@ -1,0 +1,127 @@
+﻿@model IEnumerable<PCM.Models.User>
+@{
+    ViewData["Title"] = "User Management";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.2/css/dataTables.dataTables.min.css" />
+}
+
+<div class="container mt-5">
+    <h2>User Management</h2>
+    <br />
+    <div class="mb-3">
+        <button class="btn btn-warning" id="bulkBlock">Block</button>
+        <button class="btn btn-success" id="bulkUnblock">Unblock</button>
+        <button class="btn btn-danger" id="bulkDelete">Delete</button>
+        <button class="btn btn-info" id="bulkMakeAdmin">Make As Admin</button>
+        <button class="btn btn-secondary" id="bulkRemoveAdmin">Remove As Admin</button>
+    </div>
+    <br />
+    <table id="userTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll" /></th>
+                <th>Id</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td><input type="checkbox" class="select-user" value="@user.Id" /></td>
+                    <td>@user.Id</td>
+                    <td>@user.Email</td>
+                    <td id="status-@user.Id">
+                        @(user.IsBlocked ? "Blocked" : "Active")
+                    </td>
+                    <td id="role-@user.Id">@user.Role</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Script {
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.2/js/dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#userTable').DataTable({
+                "searching": true,
+                "paging": true,
+                "ordering": true,
+                "info": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": 0 }
+                ]
+            });
+
+            $('#selectAll').on('click', function () {
+                var rows = $('#userTable').DataTable().rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+            });
+
+            $('#userTable tbody').on('change', 'input[type="checkbox"]', function () {
+                if (!this.checked) {
+                    var el = $('#selectAll').get(0);
+                    if (el && el.checked && ('indeterminate' in el)) {
+                        el.indeterminate = true;
+                    }
+                }
+            });
+
+            function getSelectedUserIds() {
+                return $('.select-user:checked').map(function () {
+                    return $(this).val();
+                }).get();
+            }
+
+            function bulkAction(url, action) {
+                var userIds = getSelectedUserIds();
+                if (userIds.length === 0) {
+                    alert('Please select at least one user.');
+                    return;
+                }
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(userIds),
+                    success: function (response) {
+                        // Reload the page or update the UI as needed
+                        location.reload();
+                    },
+                    error: function (error) {
+                        console.error(error);
+                        alert('An error occurred while performing the action.');
+                    }
+                });
+            }
+
+            $('#bulkBlock').on('click', function () {
+                bulkAction('/Admin/BlockUsers', 'Block');
+            });
+
+            $('#bulkUnblock').on('click', function () {
+                bulkAction('/Admin/UnblockUsers', 'Unblock');
+            });
+
+            $('#bulkDelete').on('click', function () {
+                bulkAction('/Admin/DeleteUsers', 'Delete');
+            });
+
+            $('#bulkMakeAdmin').on('click', function () {
+                bulkAction('/Admin/MakeAdmins', 'Make Admin');
+            });
+
+            $('#bulkRemoveAdmin').on('click', function () {
+                bulkAction('/Admin/RemoveAdmins', 'Remove Admin');
+            });
+        });
+    </script>
+}
