@@ -1,0 +1,32 @@
+name: Deploy Collection.Management App to Azure
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on push to main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0' # Specify your .NET 8 version
+
+    - name: Build
+      run: dotnet build --configuration Release
+
+    - name: Publish
+      run: dotnet publish -c Release -o ${{ github.workspace }}/publish
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'pcm'  # Replace with your Azure App Service name
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ github.workspace }}/publish
