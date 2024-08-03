@@ -1,0 +1,100 @@
+﻿@model Collection
+
+<h1>Create Collection</h1>
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+    <div class="form-group">
+        <label asp-for="CategoryId"></label>
+        <select asp-for="CategoryId" class="form-control">
+            <option value="1">Books</option>
+            <option value="2">Signs</option>
+            <option value="3">Silverware</option>
+            <option value="4">Other</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label asp-for="ImageUrl"></label>
+        <input asp-for="ImageUrl" class="form-control" />
+    </div>
+
+    <h3>Custom Fields</h3>
+
+    <h4>String Fields</h4>
+    <div class="form-group">
+        <label asp-for="CustomString1Name">Custom String 1</label>
+        <input asp-for="CustomString1Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomString2Name">Custom String 2</label>
+        <input asp-for="CustomString2Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomString3Name">Custom String 3</label>
+        <input asp-for="CustomString3Name" class="form-control" />
+    </div>
+
+    <h4>Integer Fields</h4>
+    <div class="form-group">
+        <label asp-for="CustomInt1Name">Custom Integer 1</label>
+        <input asp-for="CustomInt1Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomInt2Name">Custom Integer 2</label>
+        <input asp-for="CustomInt2Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomInt3Name">Custom Integer 3</label>
+        <input asp-for="CustomInt3Name" class="form-control" />
+    </div>
+
+    <h4>Multiline Text Fields</h4>
+    <div class="form-group">
+        <label asp-for="CustomMultilineText1Name">Custom Multiline Text 1</label>
+        <input asp-for="CustomMultilineText1Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomMultilineText2Name">Custom Multiline Text 2</label>
+        <input asp-for="CustomMultilineText2Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomMultilineText3Name">Custom Multiline Text 3</label>
+        <input asp-for="CustomMultilineText3Name" class="form-control" />
+    </div>
+
+    <h4>Boolean Fields</h4>
+    <div class="form-group">
+        <label asp-for="CustomBoolean1Name">Custom Boolean 1</label>
+        <input asp-for="CustomBoolean1Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomBoolean2Name">Custom Boolean 2</label>
+        <input asp-for="CustomBoolean2Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomBoolean3Name">Custom Boolean 3</label>
+        <input asp-for="CustomBoolean3Name" class="form-control" />
+    </div>
+
+    <h4>Date Fields</h4>
+    <div class="form-group">
+        <label asp-for="CustomDate1Name">Custom Date 1</label>
+        <input asp-for="CustomDate1Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomDate2Name">Custom Date 2</label>
+        <input asp-for="CustomDate2Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="CustomDate3Name">Custom Date 3</label>
+        <input asp-for="CustomDate3Name" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>

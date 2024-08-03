@@ -8,6 +8,6 @@
         public string Role { get; set; }
         public bool IsBlocked { get; set; } = false;
         public bool IsActive { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } 
     }
 }

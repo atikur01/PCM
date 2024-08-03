@@ -49,7 +49,7 @@ namespace PCM
 
 
             // Configure EF Core with SQL Server
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             // Register UserService as a scoped dependency
             builder.Services.AddScoped<UserService>();
@@ -93,7 +93,7 @@ namespace PCM
 
                 app.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Collection}/{action=Create}/{id?}");
 
 
                 app.Run();

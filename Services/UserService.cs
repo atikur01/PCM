@@ -7,10 +7,10 @@ namespace PCM.Services
 {
     public class UserService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly AppDbContext _context;
         private readonly PasswordHasher<object> _passwordHasher;
 
-        public UserService(ApplicationDbContext context)
+        public UserService(AppDbContext context)
         {
             _context = context;
             _passwordHasher = new PasswordHasher<object>();

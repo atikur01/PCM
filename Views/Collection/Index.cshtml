@@ -1,0 +1,27 @@
+﻿@model IEnumerable<Collection>
+
+<h1>Collections</h1>
+<p><a href="@Url.Action("Create")">Create New Collection</a></p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var collection in Model)
+        {
+            <tr>
+                <td>@collection.Name</td>
+                <td>@collection.Description</td>
+                <td>@collection.CategoryId</td>
+                <td>
+                    <a href="@Url.Action("Details", new { id = collection.Id })">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
