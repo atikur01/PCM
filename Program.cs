@@ -93,7 +93,7 @@ namespace PCM
 
                 app.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Collection}/{action=Create}/{id?}");
+                    pattern: "{controller=Collection}/{action=Index}/{id?}");
 
 
                 app.Run();

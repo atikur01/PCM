@@ -1,5 +1,10 @@
 ﻿@model Item
 
+@section Styles {
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+}
+
 <h1>Create Item</h1>
 <form asp-action="Create" method="post">
     <input type="hidden" asp-for="CollectionId" />
@@ -17,7 +22,7 @@
     @if (Model.Collection.CustomString1Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomString1Name</label>
+            <label>@Model.Collection.CustomString1Name"></label>
             <input asp-for="CustomString1" class="form-control" />
         </div>
     }
@@ -25,7 +30,7 @@
     @if (Model.Collection.CustomString2Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomString2Name</label>
+            <label>@Model.Collection.CustomString2Name"></label>
             <input asp-for="CustomString2" class="form-control" />
         </div>
     }
@@ -33,7 +38,7 @@
     @if (Model.Collection.CustomString3Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomString3Name</label>
+            <label>@Model.Collection.CustomString3Name"></label>
             <input asp-for="CustomString3" class="form-control" />
         </div>
     }
@@ -41,7 +46,7 @@
     @if (Model.Collection.CustomInt1Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomInt1Name</label>
+            <label>@Model.Collection.CustomInt1Name"></label>
             <input asp-for="CustomInt1" class="form-control" />
         </div>
     }
@@ -49,7 +54,7 @@
     @if (Model.Collection.CustomInt2Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomInt2Name</label>
+            <label>@Model.Collection.CustomInt2Name"></label>
             <input asp-for="CustomInt2" class="form-control" />
         </div>
     }
@@ -57,7 +62,7 @@
     @if (Model.Collection.CustomInt3Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomInt3Name</label>
+            <label>@Model.Collection.CustomInt3Name"></label>
             <input asp-for="CustomInt3" class="form-control" />
         </div>
     }
@@ -65,7 +70,7 @@
     @if (Model.Collection.CustomMultilineText1Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomMultilineText1Name</label>
+            <label>@Model.Collection.CustomMultilineText1Name"></label>
             <textarea asp-for="CustomMultilineText1" class="form-control"></textarea>
         </div>
     }
@@ -73,7 +78,7 @@
     @if (Model.Collection.CustomMultilineText2Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomMultilineText2Name</label>
+            <label>@Model.Collection.CustomMultilineText2Name"></label>
             <textarea asp-for="CustomMultilineText2" class="form-control"></textarea>
         </div>
     }
@@ -81,7 +86,7 @@
     @if (Model.Collection.CustomMultilineText3Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomMultilineText3Name</label>
+            <label>@Model.Collection.CustomMultilineText3Name"></label>
             <textarea asp-for="CustomMultilineText3" class="form-control"></textarea>
         </div>
     }
@@ -89,7 +94,7 @@
     @if (Model.Collection.CustomBoolean1Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomBoolean1Name</label>
+            <label>@Model.Collection.CustomBoolean1Name"></label>
             <input asp-for="CustomBoolean1" type="checkbox" class="form-check-input" />
         </div>
     }
@@ -97,7 +102,7 @@
     @if (Model.Collection.CustomBoolean2Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomBoolean2Name</label>
+            <label>@Model.Collection.CustomBoolean2Name"></label>
             <input asp-for="CustomBoolean2" type="checkbox" class="form-check-input" />
         </div>
     }
@@ -105,7 +110,7 @@
     @if (Model.Collection.CustomBoolean3Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomBoolean3Name</label>
+            <label>@Model.Collection.CustomBoolean3Name"></label>
             <input asp-for="CustomBoolean3" type="checkbox" class="form-check-input" />
         </div>
     }
@@ -113,7 +118,7 @@
     @if (Model.Collection.CustomDate1Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomDate1Name</label>
+            <label>@Model.Collection.CustomDate1Name"></label>
             <input asp-for="CustomDate1" type="date" class="form-control" />
         </div>
     }
@@ -121,7 +126,7 @@
     @if (Model.Collection.CustomDate2Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomDate2Name</label>
+            <label>@Model.Collection.CustomDate2Name"></label>
             <input asp-for="CustomDate2" type="date" class="form-control" />
         </div>
     }
@@ -129,7 +134,7 @@
     @if (Model.Collection.CustomDate3Name != null)
     {
         <div class="form-group">
-            <label>@Model.Collection.CustomDate3Name</label>
+            <label>@Model.Collection.CustomDate3Name"></label>
             <input asp-for="CustomDate3" type="date" class="form-control" />
         </div>
     }
@@ -138,6 +143,7 @@
 </form>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(function () {
@@ -145,11 +151,27 @@
                 source: function (request, response) {
                     $.ajax({
                         url: '@Url.Action("Autocomplete", "Item")',
-                        data: { term: request.term },
+                        data: { prefix: request.term },
+                        type: "POST",
                         success: function (data) {
-                            response(data);
+                            response($.map(data, function (item) {
+                                return {
+                                    label: item.label,
+                                    value: item.value
+                                };
+                            }));
+                        },
+                        error: function (response) {
+                            alert(response.responseText);
+                        },
+                        failure: function (response) {
+                            alert(response.responseText);
                         }
                     });
+                },
+                select: function (event, ui) {
+                    $("#tags-input").val(ui.item.value);
+                    return false;
                 },
                 minLength: 1
             });

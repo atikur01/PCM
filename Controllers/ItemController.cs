@@ -7,8 +7,9 @@ namespace PCM.Controllers
 {
     public class ItemController : Controller
     {
-        private readonly AppDbContext _context;
 
+
+        private readonly AppDbContext _context;
         public ItemController(AppDbContext context)
         {
             _context = context;
@@ -29,26 +30,27 @@ namespace PCM.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Item item)
         {
-            
+            if (ModelState.IsValid)
+            {
                 _context.Items.Add(item);
-                
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
-            
+            }
 
             item.Collection = _context.Collections.FirstOrDefault(c => c.Id == item.CollectionId);
-            // return View(item);
-           
+            return View(item);
         }
 
-        [HttpGet]
-        public JsonResult Autocomplete(string term)
+        [HttpPost]
+        public JsonResult Autocomplete(string prefix)
         {
-            var tags = _context.Items
-                .SelectMany(i => i.Tags)
-                .Where(t => t.StartsWith(term))
-                .Distinct()
-                .ToList();
+            var tags = (from item in _context.Items
+                        where item.Tags.Contains(prefix)
+                        select new
+                        {
+                            value = item.Tags
+                        }).ToList();
+
             return Json(tags);
         }
 
