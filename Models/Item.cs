@@ -8,12 +8,12 @@ namespace PCM.Models
     {
         public int Id { get; set; }
         public string? Name { get; set; }
-        public List<string> Tags   { get; set; }
+        public List<string> Tags { get; set; }
 
         public int CollectionId { get; set; }
         public Collection Collection { get; set; }
 
-        public string CustomString1 { get; set; }
+        public string? CustomString1 { get; set; }
         public string? CustomString2 { get; set; }
         public string? CustomString3 { get; set; }
 

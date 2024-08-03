@@ -31,6 +31,7 @@ namespace PCM.Controllers
         {
             
                 _context.Items.Add(item);
+                
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
             

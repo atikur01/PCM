@@ -25,76 +25,74 @@
     </div>
 
     <h3>Custom Fields</h3>
-
-    <h4>String Fields</h4>
-    <div class="form-group">
-        <label asp-for="CustomString1Name">Custom String 1</label>
-        <input asp-for="CustomString1Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomString2Name">Custom String 2</label>
-        <input asp-for="CustomString2Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomString3Name">Custom String 3</label>
-        <input asp-for="CustomString3Name" class="form-control" />
+    <div id="custom-fields">
+        <!-- Custom fields will be appended here -->
     </div>
 
-    <h4>Integer Fields</h4>
-    <div class="form-group">
-        <label asp-for="CustomInt1Name">Custom Integer 1</label>
-        <input asp-for="CustomInt1Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomInt2Name">Custom Integer 2</label>
-        <input asp-for="CustomInt2Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomInt3Name">Custom Integer 3</label>
-        <input asp-for="CustomInt3Name" class="form-control" />
-    </div>
-
-    <h4>Multiline Text Fields</h4>
-    <div class="form-group">
-        <label asp-for="CustomMultilineText1Name">Custom Multiline Text 1</label>
-        <input asp-for="CustomMultilineText1Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomMultilineText2Name">Custom Multiline Text 2</label>
-        <input asp-for="CustomMultilineText2Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomMultilineText3Name">Custom Multiline Text 3</label>
-        <input asp-for="CustomMultilineText3Name" class="form-control" />
-    </div>
-
-    <h4>Boolean Fields</h4>
-    <div class="form-group">
-        <label asp-for="CustomBoolean1Name">Custom Boolean 1</label>
-        <input asp-for="CustomBoolean1Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomBoolean2Name">Custom Boolean 2</label>
-        <input asp-for="CustomBoolean2Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomBoolean3Name">Custom Boolean 3</label>
-        <input asp-for="CustomBoolean3Name" class="form-control" />
-    </div>
-
-    <h4>Date Fields</h4>
-    <div class="form-group">
-        <label asp-for="CustomDate1Name">Custom Date 1</label>
-        <input asp-for="CustomDate1Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomDate2Name">Custom Date 2</label>
-        <input asp-for="CustomDate2Name" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="CustomDate3Name">Custom Date 3</label>
-        <input asp-for="CustomDate3Name" class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Create</button>
+    <button type="button" id="add-field-button" class="btn btn-primary">Add Custom Field</button>
+    <button type="submit" class="btn btn-success">Create</button>
 </form>
+
+@section Scripts {
+    <script>
+        document.getElementById('add-field-button').addEventListener('click', function () {
+            var customFieldsDiv = document.getElementById('custom-fields');
+
+            var fieldWrapper = document.createElement('div');
+            fieldWrapper.className = 'form-group custom-field-wrapper';
+            fieldWrapper.style.display = 'flex';
+            fieldWrapper.style.alignItems = 'center';
+            fieldWrapper.style.marginBottom = '10px';
+
+            var fieldNameInput = document.createElement('input');
+            fieldNameInput.placeholder = 'Enter Field name';
+            fieldNameInput.className = 'form-control';
+            fieldNameInput.style.marginRight = '10px';
+
+            var fieldTypeSelect = document.createElement('select');
+            fieldTypeSelect.className = 'form-control';
+            fieldTypeSelect.style.marginRight = '10px';
+
+            var optionTypes = ['String', 'Integer', 'MultilineText', 'Boolean', 'Date'];
+            optionTypes.forEach(function (type) {
+                var option = document.createElement('option');
+                option.value = type;
+                option.text = type;
+                fieldTypeSelect.appendChild(option);
+            });
+
+            var deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.className = 'btn btn-danger';
+            deleteButton.style.marginRight = '10px';
+            deleteButton.type = 'button';
+            deleteButton.addEventListener('click', function () {
+                customFieldsDiv.removeChild(fieldWrapper);
+            });
+
+            var hiddenFieldTypeInput = document.createElement('input');
+            hiddenFieldTypeInput.type = 'hidden';
+            hiddenFieldTypeInput.name = 'CustomFieldTypes[]';
+
+            var hiddenFieldNameInput = document.createElement('input');
+            hiddenFieldNameInput.type = 'hidden';
+            hiddenFieldNameInput.name = 'CustomFieldNames[]';
+
+            fieldWrapper.appendChild(fieldNameInput);
+            fieldWrapper.appendChild(fieldTypeSelect);
+            fieldWrapper.appendChild(deleteButton);
+            fieldWrapper.appendChild(hiddenFieldTypeInput);
+            fieldWrapper.appendChild(hiddenFieldNameInput);
+
+            customFieldsDiv.appendChild(fieldWrapper);
+
+            fieldNameInput.addEventListener('input', function () {
+                hiddenFieldNameInput.value = fieldNameInput.value;
+            });
+
+            fieldTypeSelect.addEventListener('change', function () {
+                hiddenFieldTypeInput.value = fieldTypeSelect.value;
+            });
+        });
+    </script>
+}
