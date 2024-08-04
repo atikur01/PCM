@@ -1,13 +1,12 @@
-﻿@model IEnumerable<Collection>
+﻿@model IEnumerable<PCM.Models.Collection>
 
-<h1>Collections</h1>
-<p><a href="@Url.Action("Create")">Create New Collection</a></p>
+<h2>Collections</h2>
+<a href="@Url.Action("Create")" class="btn btn-primary">Create New Collection</a>
 <table class="table">
     <thead>
         <tr>
             <th>Name</th>
             <th>Description</th>
-            <th>Category</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -17,9 +16,10 @@
             <tr>
                 <td>@collection.Name</td>
                 <td>@collection.Description</td>
-                <td>@collection.CategoryId</td>
                 <td>
-                    <a href="@Url.Action("Details", new { id = collection.Id })">Details</a>
+                    <a href="@Url.Action("Details", new { id = collection.Id })" class="btn btn-info">Details</a>
+                    <a href="@Url.Action("Edit", new { id = collection.Id })" class="btn btn-warning">Edit</a>
+                    <a href="@Url.Action("Delete", new { id = collection.Id })" class="btn btn-danger">Delete</a>
                 </td>
             </tr>
         }

@@ -80,7 +80,11 @@ namespace PCM.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Tags = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Tag1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Tag2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Tag3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Tag4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Tag5 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CollectionId = table.Column<int>(type: "int", nullable: false),
                     CustomString1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CustomString2 = table.Column<string>(type: "nvarchar(max)", nullable: true),

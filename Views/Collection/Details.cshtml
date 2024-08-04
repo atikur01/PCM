@@ -1,79 +1,26 @@
-﻿@model Collection
+﻿@model PCM.Models.Collection
 
+<h2>Collection Details</h2>
+<table class="table">
+    <tr>
+        <th>Name</th>
+        <td>@Model.Name</td>
+    </tr>
+    <tr>
+        <th>Description</th>
+        <td>@Model.Description</td>
+    </tr>
+    <!-- Display custom fields here -->
+</table>
 
-<h1>@Model.Name</h1>
-<p>@Model.Description</p>
-<img src="@Model.ImageUrl" alt="@Model.Name" />
-<p>Category: @Model.CategoryId</p>
-
-<h2>Items</h2>
-<p><a asp-action="Create" asp-controller="Item" asp-route-collectionId="@Model.Id">Add Item</a></p>
-
+<h3>Items</h3>
+<a href="@Url.Action("Create", "Item", new { collectionId = Model.Id })" class="btn btn-primary">Add Item</a>
 <table class="table">
     <thead>
         <tr>
             <th>Name</th>
             <th>Tags</th>
-            @if (Model.CustomString1Name != null)
-            {
-                <th>@Model.CustomString1Name</th>
-            }
-            @if (Model.CustomString2Name != null)
-            {
-                <th>@Model.CustomString2Name</th>
-            }
-            @if (Model.CustomString3Name != null)
-            {
-                <th>@Model.CustomString3Name</th>
-            }
-            @if (Model.CustomInt1Name != null)
-            {
-                <th>@Model.CustomInt1Name</th>
-            }
-            @if (Model.CustomInt2Name != null)
-            {
-                <th>@Model.CustomInt2Name</th>
-            }
-            @if (Model.CustomInt3Name != null)
-            {
-                <th>@Model.CustomInt3Name</th>
-            }
-            @if (Model.CustomMultilineText1Name != null)
-            {
-                <th>@Model.CustomMultilineText1Name</th>
-            }
-            @if (Model.CustomMultilineText2Name != null)
-            {
-                <th>@Model.CustomMultilineText2Name</th>
-            }
-            @if (Model.CustomMultilineText3Name != null)
-            {
-                <th>@Model.CustomMultilineText3Name</th>
-            }
-            @if (Model.CustomBoolean1Name != null)
-            {
-                <th>@Model.CustomBoolean1Name</th>
-            }
-            @if (Model.CustomBoolean2Name != null)
-            {
-                <th>@Model.CustomBoolean2Name</th>
-            }
-            @if (Model.CustomBoolean3Name != null)
-            {
-                <th>@Model.CustomBoolean3Name</th>
-            }
-            @if (Model.CustomDate1Name != null)
-            {
-                <th>@Model.CustomDate1Name</th>
-            }
-            @if (Model.CustomDate2Name != null)
-            {
-                <th>@Model.CustomDate2Name</th>
-            }
-            @if (Model.CustomDate3Name != null)
-            {
-                <th>@Model.CustomDate3Name</th>
-            }
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -81,67 +28,11 @@
         {
             <tr>
                 <td>@item.Name</td>
-                <td>@string.Join(", ", item.Tags)</td>
-                @if (Model.CustomString1Name != null)
-                {
-                    <td>@item.CustomString1</td>
-                }
-                @if (Model.CustomString2Name != null)
-                {
-                    <td>@item.CustomString2</td>
-                }
-                @if (Model.CustomString3Name != null)
-                {
-                    <td>@item.CustomString3</td>
-                }
-                @if (Model.CustomInt1Name != null)
-                {
-                    <td>@item.CustomInt1</td>
-                }
-                @if (Model.CustomInt2Name != null)
-                {
-                    <td>@item.CustomInt2</td>
-                }
-                @if (Model.CustomInt3Name != null)
-                {
-                    <td>@item.CustomInt3</td>
-                }
-                @if (Model.CustomMultilineText1Name != null)
-                {
-                    <td>@item.CustomMultilineText1</td>
-                }
-                @if (Model.CustomMultilineText2Name != null)
-                {
-                    <td>@item.CustomMultilineText2</td>
-                }
-                @if (Model.CustomMultilineText3Name != null)
-                {
-                    <td>@item.CustomMultilineText3</td>
-                }
-                @if (Model.CustomBoolean1Name != null)
-                {
-                    <td>@item.CustomBoolean1</td>
-                }
-                @if (Model.CustomBoolean2Name != null)
-                {
-                    <td>@item.CustomBoolean2</td>
-                }
-                @if (Model.CustomBoolean3Name != null)
-                {
-                    <td>@item.CustomBoolean3</td>
-                }
-                @if (Model.CustomDate1Name != null)
-                {
-                    <td>@item.CustomDate1</td>
-                }
-                @if (Model.CustomDate2Name != null)
-                {
-                    <td>@item.CustomDate2</td>
-                }
-                @if (Model.CustomDate3Name != null)
-                {
-                    <td>@item.CustomDate3</td>
-                }
+                <td>@string.Join(", ", new[] { item.Tag1, item.Tag2, item.Tag3, item.Tag4, item.Tag5 }.Where(t => !string.IsNullOrEmpty(t)))</td>
+                <td>
+                    <a href="@Url.Action("Edit", "Item", new { id = item.Id })" class="btn btn-warning">Edit</a>
+                    <a href="@Url.Action("Delete", "Item", new { id = item.Id })" class="btn btn-danger">Delete</a>
+                </td>
             </tr>
         }
     </tbody>

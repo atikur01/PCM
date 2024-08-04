@@ -8,7 +8,11 @@ namespace PCM.Models
     {
         public int Id { get; set; }
         public string? Name { get; set; }
-        public List<string> Tags { get; set; }
+        public string? Tag1 { get; set; }
+        public string? Tag2 { get; set; }
+        public string? Tag3 { get; set; }
+        public string? Tag4 { get; set; }
+        public string? Tag5 { get; set; }
 
         public int CollectionId { get; set; }
         public Collection Collection { get; set; }

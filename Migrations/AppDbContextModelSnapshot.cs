@@ -154,8 +154,19 @@ namespace PCM.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Tags")
-                        .IsRequired()
+                    b.Property<string>("Tag1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tag2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tag3")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tag4")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tag5")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
