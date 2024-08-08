@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PCM.Data;
 
@@ -11,9 +12,11 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240808094939_InitialCreate3")]
+    partial class InitialCreate3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -102,65 +105,57 @@ namespace PCM.Migrations
                     b.Property<Guid>("CollectionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("CustomBoolean1Value")
+                    b.Property<bool?>("CustomBoolean1")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("CustomBoolean2")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("CustomBoolean3")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("CustomDate1")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CustomDate2")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CustomDate3")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CustomInt1")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomInt2")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomInt3")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomMultilineText1")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomBoolean2Value")
+                    b.Property<string>("CustomMultilineText2")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomBoolean3Value")
+                    b.Property<string>("CustomMultilineText3")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomDate1Value")
+                    b.Property<string>("CustomString1")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomDate2Value")
+                    b.Property<string>("CustomString2")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomDate3Value")
+                    b.Property<string>("CustomString3")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomInt1Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomInt2Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomInt3Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomMultilineText1Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomMultilineText2Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomMultilineText3Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomString1Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomString2Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomString3Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("ItemId1")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Tag")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ItemId");
 
                     b.HasIndex("CollectionId");
-
-                    b.HasIndex("ItemId1");
 
                     b.ToTable("Items");
                 });
@@ -205,19 +200,10 @@ namespace PCM.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PCM.Models.Item", null)
-                        .WithMany("Items")
-                        .HasForeignKey("ItemId1");
-
                     b.Navigation("Collection");
                 });
 
             modelBuilder.Entity("PCM.Models.Collection", b =>
-                {
-                    b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("PCM.Models.Item", b =>
                 {
                     b.Navigation("Items");
                 });

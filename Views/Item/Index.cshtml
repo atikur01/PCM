@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<PCM.Models.Item>
 @{
     ViewBag.Title = "Items";
-    int collectionId = ViewBag.CollectionId;
+    var collectionId = ViewBag.CollectionId;
 }
 
 <h2>Items</h2>
@@ -19,10 +19,12 @@
         {
             <tr>
                 <td>@item.Name</td>
-                <td>@string.Join(", ", new[] { item.Tag1, item.Tag2, item.Tag3, item.Tag4, item.Tag5 }.Where(t => !string.IsNullOrEmpty(t)))</td>
+               @*  <td>@string.Join(", ", new[] { item.Tag1, item.Tag2, item.Tag3, item.Tag4, item.Tag5 }.Where(t => !string.IsNullOrEmpty(t)))</td> *@
+
+               <td>@item.Tag</td>   
                 <td>
-                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-warning">Edit</a>
-                    <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-danger">Delete</a>
+                    <a href="@Url.Action("Edit", new { id = item.ItemId })" class="btn btn-warning">Edit</a>
+                    <a href="@Url.Action("Delete", new { id = item.ItemId })" class="btn btn-danger">Delete</a>
                 </td>
             </tr>
         }

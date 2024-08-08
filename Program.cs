@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PCM.ActionFilter;
 using PCM.Data;
+using PCM.Models;
 using PCM.Services;
 using Serilog;
 
@@ -19,7 +20,7 @@ namespace PCM
                 .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Error)  // Logs from System namespace
                 .Enrich.FromLogContext()  // Enrich logs with context information
                 .WriteTo.Seq("http://seq.atikapps.com:5341/")
-                .WriteTo.Console()  // Console sink for debugging              
+                .WriteTo.Console()             
                 .CreateLogger();
 
             // Replace the default logging with Serilog
@@ -51,8 +52,12 @@ namespace PCM
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             // Register UserService as a scoped dependency
             builder.Services.AddScoped<UserService>();
+
+            builder.Services.AddSingleton<CloudinaryUploader>();
+
 
             builder.Services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
             builder.Services.AddSession(options =>
@@ -65,10 +70,15 @@ namespace PCM
             builder.Services.AddSession();
 
 
-
             try
             {
                 var app = builder.Build();
+
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    dbContext.Database.Migrate();
+                }
 
                 Log.Information("Application starting up...");
 
@@ -82,19 +92,13 @@ namespace PCM
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();
-
                 app.UseRouting();
-
-
                 app.UseCors("AllowAll");
-
                 app.UseAuthorization();
                 app.UseSession();
-
                 app.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Collection}/{action=Index}/{id?}");
-
 
                 app.Run();
 
@@ -106,11 +110,9 @@ namespace PCM
             finally
             {
                 Log.CloseAndFlush();
-
-
             }
 
         }
     }
-    
+
 }

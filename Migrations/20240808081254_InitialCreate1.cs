@@ -15,45 +15,16 @@ namespace PCM.Migrations
                 name: "Collections",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CollectionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CategoryId = table.Column<int>(type: "int", nullable: true),
-                    CustomString1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomString2Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomString3Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomInt1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomInt2Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomInt3Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomMultilineText1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomMultilineText2Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomMultilineText3Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomBoolean1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomBoolean2Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomBoolean3Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomDate1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomDate2Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CustomDate3Name = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CategoryName = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Collections", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tags",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tags", x => x.Id);
+                    table.PrimaryKey("PK_Collections", x => x.CollectionId);
                 });
 
             migrationBuilder.CreateTable(
@@ -74,18 +45,32 @@ namespace PCM.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CustomFields",
+                columns: table => new
+                {
+                    CustomFieldId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CollectionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomFields", x => x.CustomFieldId);
+                    table.ForeignKey(
+                        name: "FK_CustomFields_Collections_CollectionId",
+                        column: x => x.CollectionId,
+                        principalTable: "Collections",
+                        principalColumn: "CollectionId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Items",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Tag1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Tag2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Tag3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Tag4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Tag5 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CollectionId = table.Column<int>(type: "int", nullable: false),
+                    CollectionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CustomString1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CustomString2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CustomString3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -104,14 +89,19 @@ namespace PCM.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Items", x => x.Id);
+                    table.PrimaryKey("PK_Items", x => x.ItemId);
                     table.ForeignKey(
                         name: "FK_Items_Collections_CollectionId",
                         column: x => x.CollectionId,
                         principalTable: "Collections",
-                        principalColumn: "Id",
+                        principalColumn: "CollectionId",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomFields_CollectionId",
+                table: "CustomFields",
+                column: "CollectionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Items_CollectionId",
@@ -123,10 +113,10 @@ namespace PCM.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Items");
+                name: "CustomFields");
 
             migrationBuilder.DropTable(
-                name: "Tags");
+                name: "Items");
 
             migrationBuilder.DropTable(
                 name: "Users");

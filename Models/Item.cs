@@ -6,35 +6,36 @@ namespace PCM.Models
 {
     public class Item
     {
-        public int Id { get; set; }
+        public Guid ItemId { get; set; }
+
+        public Guid CollectionId { get; set; }
         public string? Name { get; set; }
-        public string? Tag1 { get; set; }
-        public string? Tag2 { get; set; }
-        public string? Tag3 { get; set; }
-        public string? Tag4 { get; set; }
-        public string? Tag5 { get; set; }
 
-        public int CollectionId { get; set; }
-        public Collection Collection { get; set; }
+        public string? Tag { get; set; }
+        
+        public Collection? Collection { get; set; }
 
-        public string? CustomString1 { get; set; }
-        public string? CustomString2 { get; set; }
-        public string? CustomString3 { get; set; }
+        // Custom Field Names
+        public string? CustomString1Value { get; set; }
+        public string? CustomString2Value { get; set; }
+        public string? CustomString3Value { get; set; }
 
-        public int? CustomInt1 { get; set; }
-        public int? CustomInt2 { get; set; }
-        public int? CustomInt3 { get; set; }
+        public string? CustomInt1Value { get; set; }
+        public string? CustomInt2Value { get; set; }
+        public string? CustomInt3Value { get; set; }
 
-        public string? CustomMultilineText1 { get; set; }
-        public string? CustomMultilineText2 { get; set; }
-        public string? CustomMultilineText3 { get; set; }
+        public string? CustomMultilineText1Value { get; set; }
+        public string? CustomMultilineText2Value { get; set; }
+        public string? CustomMultilineText3Value { get; set; }
 
-        public bool? CustomBoolean1 { get; set; }
-        public bool? CustomBoolean2 { get; set; }
-        public bool? CustomBoolean3 { get; set; }
+        public string? CustomBoolean1Value { get; set; }
+        public string? CustomBoolean2Value { get; set; }
+        public string? CustomBoolean3Value { get; set; }
 
-        public DateTime? CustomDate1 { get; set; }
-        public DateTime? CustomDate2 { get; set; }
-        public DateTime? CustomDate3 { get; set; }
+        public string? CustomDate1Value { get; set; }
+        public string? CustomDate2Value { get; set; }
+        public string? CustomDate3Value { get; set; }
+
+        public List<Item> Items { get; set; }    
     }
 }

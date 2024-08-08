@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Markdig;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PCM.Data;
 using PCM.Models;
+using PCM.Services;
+using PCM.ViewModels;
+using Serilog;
 using System;
 
 namespace PCM.Controllers
@@ -10,15 +15,21 @@ namespace PCM.Controllers
     {
 
         private readonly AppDbContext _context;
+        private readonly CloudinaryUploader _cloudinaryUploader;
+     
 
-        public CollectionController(AppDbContext context)
+        public CollectionController(AppDbContext context, CloudinaryUploader cloudinaryUploader)
         {
             _context = context;
+            _cloudinaryUploader = cloudinaryUploader;
+
+
         }
 
         public IActionResult Index()
         {
             var collections = _context.Collections.Include(c => c.Items).ToList();
+            
             return View(collections);
         }
 
@@ -28,56 +39,24 @@ namespace PCM.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Collection collection, string[] CustomFieldNames, string[] CustomFieldTypes)
+        public async Task<IActionResult> Create(Collection collection, IFormFile Image)
         {
-            if (ModelState.IsValid)
-            {
-                // Logic to add custom fields to collection
-                for (int i = 0; i < CustomFieldNames.Length; i++)
-                {
-                    var fieldName = CustomFieldNames[i];
-                    var fieldType = CustomFieldTypes[i];
+            string ImageUrl = await Upload(Image);
 
-                    switch (fieldType)
-                    {
-                        case "String":
-                            if (collection.CustomString1Name == null) collection.CustomString1Name = fieldName;
-                            else if (collection.CustomString2Name == null) collection.CustomString2Name = fieldName;
-                            else collection.CustomString3Name = fieldName;
-                            break;
-                        case "Integer":
-                            if (collection.CustomInt1Name == null) collection.CustomInt1Name = fieldName;
-                            else if (collection.CustomInt2Name == null) collection.CustomInt2Name = fieldName;
-                            else collection.CustomInt3Name = fieldName;
-                            break;
-                        case "MultilineText":
-                            if (collection.CustomMultilineText1Name == null) collection.CustomMultilineText1Name = fieldName;
-                            else if (collection.CustomMultilineText2Name == null) collection.CustomMultilineText2Name = fieldName;
-                            else collection.CustomMultilineText3Name = fieldName;
-                            break;
-                        case "Boolean":
-                            if (collection.CustomBoolean1Name == null) collection.CustomBoolean1Name = fieldName;
-                            else if (collection.CustomBoolean2Name == null) collection.CustomBoolean2Name = fieldName;
-                            else collection.CustomBoolean3Name = fieldName;
-                            break;
-                        case "Date":
-                            if (collection.CustomDate1Name == null) collection.CustomDate1Name = fieldName;
-                            else if (collection.CustomDate2Name == null) collection.CustomDate2Name = fieldName;
-                            else collection.CustomDate3Name = fieldName;
-                            break;
-                    }
-                }
+            var htmlContent = Markdown.ToHtml(collection.Description);
+            collection.Description = htmlContent;
+            collection.CollectionId = Guid.NewGuid();
+            collection.ImageUrl = ImageUrl;
+            _context.Collections.Add(collection);
+            await _context.SaveChangesAsync();
 
-                _context.Collections.Add(collection);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(collection);
+            return RedirectToAction(nameof(Index));
+
         }
 
-        public IActionResult Details(int id)
+        public IActionResult Details(Guid id)
         {
-            var collection = _context.Collections.Include(c => c.Items).FirstOrDefault(c => c.Id == id);
+            var collection = _context.Collections.Include(c => c.Items).FirstOrDefault(c => c.CollectionId == id);
             if (collection == null)
             {
                 return NotFound();
@@ -85,51 +64,85 @@ namespace PCM.Controllers
             return View(collection);
         }
 
-        [HttpGet]
-        public IActionResult GetCustomFieldTemplate(string fieldName, string fieldType)
+
+
+
+        public async Task<string?> Upload(IFormFile file)
         {
-            string template = string.Empty;
-            switch (fieldType)
+            if (file == null || file.Length == 0)
             {
-                case "String":
-                    template = $@"
-                    <div class='form-group'>
-                        <label>{fieldName}</label>
-                        <input name='{fieldName}' class='form-control' />
-                    </div>";
-                    break;
-                case "Integer":
-                    template = $@"
-                    <div class='form-group'>
-                        <label>{fieldName}</label>
-                        <input name='{fieldName}' type='number' class='form-control' />
-                    </div>";
-                    break;
-                case "MultilineText":
-                    template = $@"
-                    <div class='form-group'>
-                        <label>{fieldName}</label>
-                        <textarea name='{fieldName}' class='form-control'></textarea>
-                    </div>";
-                    break;
-                case "Boolean":
-                    template = $@"
-                    <div class='form-group'>
-                        <label>{fieldName}</label>
-                        <input name='{fieldName}' type='checkbox' class='form-check-input' />
-                    </div>";
-                    break;
-                case "Date":
-                    template = $@"
-                    <div class='form-group'>
-                        <label>{fieldName}</label>
-                        <input name='{fieldName}' type='date' class='form-control' />
-                    </div>";
-                    break;
+                return "File is empty.";
             }
 
-            return Content(template);
+            string publicUrl = await _cloudinaryUploader.UploadFileAsync(file);
+
+            if (publicUrl == null)
+            {
+                return "Error uploading file to Cloudinary.";
+            }
+
+            return publicUrl;
         }
+
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var collection = _context.Collections.FirstOrDefault(c => c.CollectionId == id);
+            await _cloudinaryUploader.RemoveImageAsync(collection.ImageUrl);
+            _context.Collections.Remove(collection);
+            _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+
+        }
+
+
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+
+            return View(collection);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(Collection collection,IFormFile Image)
+        {
+     
+
+            try
+            {
+                // Upload image if exists
+                if (Image != null)
+                {
+                    string imageUrl = await Upload(Image);
+                    collection.ImageUrl = imageUrl;
+                }
+
+                _context.Update(collection);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CollectionExists(collection.CollectionId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
+
+        }
+
+        private bool CollectionExists(Guid id)
+        {
+            return _context.Collections.Any(e => e.CollectionId == id);
+        }
+
+
+
+
 
 
     }

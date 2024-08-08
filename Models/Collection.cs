@@ -2,12 +2,12 @@
 {
     public class Collection
     {
-        public int Id { get; set; } // Id remains non-nullable
+        public Guid CollectionId { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
         public string? UserId { get; set; }
-        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
 
         // Custom Field Names
         public string? CustomString1Name { get; set; }

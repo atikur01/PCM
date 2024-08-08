@@ -3,16 +3,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Collection.Management</title>
+    <title>@ViewData["Title"] - PCM</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PCM.styles.css" asp-append-version="true" />
 
     @await RenderSectionAsync("Styles", required: false)
+
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Collection.Management</a>
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">PCM</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -22,7 +23,7 @@
                     <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-area="" asp-controller="Collections" asp-action="Index">Collections</a>
+                    <a class="nav-link" asp-area="" asp-controller="Collection" asp-action="Index">Collections</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" asp-area="" asp-controller="Tags" asp-action="Index">Tags</a>
@@ -50,7 +51,7 @@
 
     <footer class="border-top footer text-muted mt-4">
         <div class="container">
-            &copy; 2024 - Collection.Management - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2024 - PCM - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
 

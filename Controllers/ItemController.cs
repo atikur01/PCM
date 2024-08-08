@@ -15,7 +15,7 @@ namespace PCM.Controllers
             _context = context;
         }
 
-        public IActionResult Index(int collectionId)
+        public IActionResult Index(Guid collectionId)
         {
             var items = _context.Items
                 .Where(i => i.CollectionId == collectionId)
@@ -25,14 +25,11 @@ namespace PCM.Controllers
             return View(items);
         }
 
-        public IActionResult Create(int collectionId)
+        public IActionResult Create(Guid collectionId)
         {
             ViewBag.CollectionId = collectionId;
-            var collection = _context.Collections.FirstOrDefault(c => c.Id == collectionId);
-            if (collection == null)
-            {
-                return NotFound();
-            }
+            var collection = _context.Collections.FirstOrDefault(c => c.CollectionId == collectionId);
+
             return View(new Item { CollectionId = collectionId, Collection = collection });
         }
 
@@ -40,23 +37,21 @@ namespace PCM.Controllers
         public async Task<IActionResult> Create(Item item)
         {
             
-                _context.Items.Add(item);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index), new { collectionId = item.CollectionId });
-            
-            var collection = _context.Collections.FirstOrDefault(c => c.Id == item.CollectionId);
-            item.Collection = collection;
-            return View(item);
+            _context.Items.Add(item);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+
         }
 
-        public IActionResult Edit(int id)
+        public IActionResult Edit(Guid id)
         {
-            var item = _context.Items.FirstOrDefault(i => i.Id == id);
+            var item = _context.Items.FirstOrDefault(i => i.ItemId == id);
             if (item == null)
             {
                 return NotFound();
             }
-            var collection = _context.Collections.FirstOrDefault(c => c.Id == item.CollectionId);
+            var collection = _context.Collections.FirstOrDefault(c => c.CollectionId == item.CollectionId);
             ViewBag.Collection = collection;
             return View(item);
         }
@@ -64,48 +59,22 @@ namespace PCM.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Item item)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Items.Update(item);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index), new { collectionId = item.CollectionId });
-            }
-            return View(item);
+            _context.Items.Update(item);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult>  Delete(Guid id)
         {
-            var item = _context.Items.FirstOrDefault(i => i.Id == id);
-            if (item == null)
-            {
-                return NotFound();
-            }
-            return View(item);
+            var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == id);
+            _context.Items.Remove(item);
+            await _context.SaveChangesAsync();  
+            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
         }
 
-        [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var item = _context.Items.FirstOrDefault(i => i.Id == id);
-            if (item != null)
-            {
-                _context.Items.Remove(item);
-                await _context.SaveChangesAsync();
-            }
-            return RedirectToAction(nameof(Index), new { collectionId = item.CollectionId });
-        }
-
-        public IActionResult AutocompleteTags(string term)
-        {
-            var tags = _context.Items
-                .Where(i => i.Tag1.StartsWith(term) || i.Tag2.StartsWith(term) || i.Tag3.StartsWith(term) || i.Tag4.StartsWith(term) || i.Tag5.StartsWith(term))
-                .SelectMany(i => new[] { i.Tag1, i.Tag2, i.Tag3, i.Tag4, i.Tag5 })
-                .Where(t => t != null && t.StartsWith(term))
-                .Distinct()
-                .Take(10)
-                .ToList();
-            return Json(tags);
-        }
+        
+      
 
 
     }
