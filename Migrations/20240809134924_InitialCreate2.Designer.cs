@@ -12,8 +12,8 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240808135354_InitialCreate5")]
-    partial class InitialCreate5
+    [Migration("20240809134924_InitialCreate2")]
+    partial class InitialCreate2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -156,6 +156,9 @@ namespace PCM.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Tag")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("ItemId");
 
                     b.HasIndex("CollectionId");
@@ -163,6 +166,32 @@ namespace PCM.Migrations
                     b.HasIndex("ItemId1");
 
                     b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.Property<Guid>("TagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("TagId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TagId");
+
+                    b.HasIndex("ItemId")
+                        .IsUnique();
+
+                    b.HasIndex("TagId1");
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("PCM.Models.User", b =>
@@ -212,6 +241,21 @@ namespace PCM.Migrations
                     b.Navigation("Collection");
                 });
 
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithOne("tag")
+                        .HasForeignKey("PCM.Models.Tag", "ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PCM.Models.Tag", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("TagId1");
+
+                    b.Navigation("Item");
+                });
+
             modelBuilder.Entity("PCM.Models.Collection", b =>
                 {
                     b.Navigation("Items");
@@ -220,6 +264,14 @@ namespace PCM.Migrations
             modelBuilder.Entity("PCM.Models.Item", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("tag")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

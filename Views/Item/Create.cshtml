@@ -1,19 +1,35 @@
 ﻿@model PCM.Models.Item
 
-<h2>Create Item</h2>
-<form asp-action="Create" method="post">
+﻿@{
+    ViewData["Title"] = "Create Item";
+    var AllTagNames = ViewBag.AllTagNames as List<string>;
+}
 
-    <input type="hidden" asp-for="CollectionId" />
+@section Styles {
+    <!-- Include Tagify CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.27.0/tagify.css">
+
+   
+}   
+
+<h2>Create Item</h2>
+<form asp-action="Create" method="post" id="createItemForm">
+
+    <input type="hidden" asp-for="CollectionId" id="collectionId"/>
 
     <div class="form-group">
         <label for="Name">Name</label>
         <input asp-for="Name" class="form-control" required/>
     </div>
 
+
     <div class="form-group">
-        <label for="Tag">Tag</label>
-        <input asp-for="Tag" class="form-control" />
+        <label for="Tags">Tags</label>
+        <input name='tags' id="tagsInput" placeholder='Type something' class="form-control">
     </div>
+
+    
+
 
     @if (Model.Collection.CustomString1Name != null)
     {
@@ -69,11 +85,11 @@
 
         </div>
     }
-    @if (Model.Collection.CustomMultilineText1Name != null)
+    @if (Model.Collection.CustomMultilineText2Name != null)
     {
         <div class="form-group">
-            <label for="CustomMultilineText1Name ">@Model.Collection.CustomMultilineText1Name</label>
-            <textarea asp-for="CustomMultilineText1Value" class="form-control"> </textarea>
+            <label for="CustomMultilineText2Name ">@Model.Collection.CustomMultilineText2Name</label>
+            <textarea asp-for="CustomMultilineText2Value" class="form-control"> </textarea>
         </div>
     }
     @if (Model.Collection.CustomMultilineText3Name != null)
@@ -144,4 +160,56 @@
     </div>
 
 </form>
+
+@section Scripts {
+
+    <!-- Include Tagify JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.27.0/tagify.min.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Tagify
+            var input = document.querySelector('#tagsInput');
+            var tagify = new Tagify(input, {
+                whitelist: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(AllTagNames)),
+                enforceWhitelist: false,
+                editTags: 1  // enable editing of tags with a single click
+            });
+
+            // Preload existing tags
+           // tagify.addTags(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(AllTagNames)));
+
+            // Handle form submission
+            $('#createItemForm').on('submit', function (event) {
+                event.preventDefault(); // Prevent the form from submitting the traditional way
+
+                var collectionId = $('#collectionId').val();
+
+                var tags = tagify.value.map(tag => tag.value); // Get tags from Tagify
+
+                // Combine form data and tags
+                var formData = $(this).serializeArray();
+                formData.push({ name: 'tags', value: JSON.stringify(tags) });
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: $(this).attr('method'),
+                    data: $.param(formData), // Serialize form data including tags
+                    success: function (response) {
+                        // Handle successful response
+                        console.log('Item created successfully!');
+                        window.location.href = `/Collection/Details/${collectionId}`;
+                        // Optionally, you can redirect or update the page content
+
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle error response
+                        console.log('Error: ' + error);
+                    }
+                });
+            });
+        });
+    </script>
+}   
 

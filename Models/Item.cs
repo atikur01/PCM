@@ -36,6 +36,13 @@ namespace PCM.Models
         public string? CustomDate2Value { get; set; }
         public string? CustomDate3Value { get; set; }
 
-        public List<Item> Items { get; set; }    
+
+        [NotMapped]
+        public List<Item> Items { get; set; }
+
+   
+        [NotMapped]
+        public List<string> tags { get; set; }
+        
     }
 }

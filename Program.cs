@@ -53,6 +53,8 @@ namespace PCM
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+
             // Register UserService as a scoped dependency
             builder.Services.AddScoped<UserService>();
 

@@ -147,9 +147,6 @@ namespace PCM.Migrations
                     b.Property<string>("CustomString3Value")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("ItemId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -160,9 +157,24 @@ namespace PCM.Migrations
 
                     b.HasIndex("CollectionId");
 
-                    b.HasIndex("ItemId1");
-
                     b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.Property<Guid>("TagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TagId");
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("PCM.Models.User", b =>
@@ -205,19 +217,10 @@ namespace PCM.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PCM.Models.Item", null)
-                        .WithMany("Items")
-                        .HasForeignKey("ItemId1");
-
                     b.Navigation("Collection");
                 });
 
             modelBuilder.Entity("PCM.Models.Collection", b =>
-                {
-                    b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("PCM.Models.Item", b =>
                 {
                     b.Navigation("Items");
                 });

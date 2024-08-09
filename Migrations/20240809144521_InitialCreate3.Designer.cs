@@ -12,8 +12,8 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240808143606_InitialCreate6")]
-    partial class InitialCreate6
+    [Migration("20240809144521_InitialCreate3")]
+    partial class InitialCreate3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -168,6 +168,26 @@ namespace PCM.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.Property<Guid>("TagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TagId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("Tags");
+                });
+
             modelBuilder.Entity("PCM.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -213,6 +233,17 @@ namespace PCM.Migrations
                         .HasForeignKey("ItemId1");
 
                     b.Navigation("Collection");
+                });
+
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("PCM.Models.Collection", b =>
