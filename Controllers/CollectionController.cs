@@ -22,8 +22,6 @@ namespace PCM.Controllers
         {
             _context = context;
             _cloudinaryUploader = cloudinaryUploader;
-
-
         }
 
         public IActionResult Index()
@@ -33,24 +31,52 @@ namespace PCM.Controllers
             return View(collections);
         }
 
+        public async Task<IActionResult> IndexByUserID(Guid userid)
+        {
+            ViewBag.UserId = userid;
+
+            var collections = await _context.Collections
+            .Where(c => c.UserId == userid)
+            .ToListAsync();
+
+            return View(collections);
+
+        }
+
+
         public IActionResult Create()
         {
             return View();
         }
+
+        [HttpGet]
+        public IActionResult CreateByUserID(Guid userid)
+        {
+            ViewBag.UserId = userid;    
+            return View();
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Create(Collection collection, IFormFile Image)
         {
             string ImageUrl = await Upload(Image);
 
+            if(collection.Description == null)
+            {
+                collection.Description = "";
+            }   
+
             var htmlContent = Markdown.ToHtml(collection.Description);
             collection.Description = htmlContent;
             collection.CollectionId = Guid.NewGuid();
             collection.ImageUrl = ImageUrl;
+            collection.CreatedAt = DateTime.Now;
+            collection.TotalItems = 0;  
             _context.Collections.Add(collection);
             await _context.SaveChangesAsync();
+            return RedirectToAction("IndexByUserID", new { userid = collection.UserId });
 
-            return RedirectToAction(nameof(Index));
 
         }
 
@@ -64,7 +90,7 @@ namespace PCM.Controllers
             return View(collection);
         }
 
-
+        
 
 
         public async Task<string?> Upload(IFormFile file)
@@ -107,7 +133,6 @@ namespace PCM.Controllers
         public async Task<IActionResult> Edit(Collection collection,IFormFile Image)
         {
      
-
             try
             {
                 // Upload image if exists
@@ -122,7 +147,7 @@ namespace PCM.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!CollectionExists(collection.CollectionId))
+                if (! CollectionExists(collection.CollectionId))
                 {
                     return NotFound();
                 }
@@ -139,11 +164,6 @@ namespace PCM.Controllers
         {
             return _context.Collections.Any(e => e.CollectionId == id);
         }
-
-
-
-
-
 
     }
 }

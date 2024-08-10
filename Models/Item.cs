@@ -9,11 +9,15 @@ namespace PCM.Models
         public Guid ItemId { get; set; }
 
         public Guid CollectionId { get; set; }
-        public string? Name { get; set; }
 
-        public string? Tag { get; set; }
-        
+        public string? Author { get; set; }
+
+        public string? CollectionName { get; set; }
+
+        public string? Name { get; set; }
+    
         public Collection? Collection { get; set; }
+
 
         // Custom Field Names
         public string? CustomString1Value { get; set; }
@@ -35,6 +39,8 @@ namespace PCM.Models
         public string? CustomDate1Value { get; set; }
         public string? CustomDate2Value { get; set; }
         public string? CustomDate3Value { get; set; }
+
+        public DateTime CreatedAt { get; set; } 
 
 
         [NotMapped]

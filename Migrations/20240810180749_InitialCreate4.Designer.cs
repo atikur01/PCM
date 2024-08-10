@@ -12,7 +12,7 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240809154807_InitialCreate4")]
+    [Migration("20240810180749_InitialCreate4")]
     partial class InitialCreate4
     {
         /// <inheritdoc />
@@ -33,6 +33,9 @@ namespace PCM.Migrations
 
                     b.Property<string>("CategoryName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CustomBoolean1Name")
                         .HasColumnType("nvarchar(max)");
@@ -88,10 +91,15 @@ namespace PCM.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("CollectionId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Collections");
                 });
@@ -102,8 +110,17 @@ namespace PCM.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Author")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("CollectionId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CollectionName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CustomBoolean1Value")
                         .HasColumnType("nvarchar(max)");
@@ -153,9 +170,6 @@ namespace PCM.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Tag")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("ItemId");
 
                     b.HasIndex("CollectionId");
@@ -169,7 +183,7 @@ namespace PCM.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ItemId")
+                    b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -177,12 +191,14 @@ namespace PCM.Migrations
 
                     b.HasKey("TagId");
 
+                    b.HasIndex("ItemId");
+
                     b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("PCM.Models.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -199,6 +215,10 @@ namespace PCM.Migrations
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -207,9 +227,20 @@ namespace PCM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PCM.Models.Collection", b =>
+                {
+                    b.HasOne("PCM.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PCM.Models.Item", b =>
@@ -221,6 +252,17 @@ namespace PCM.Migrations
                         .IsRequired();
 
                     b.Navigation("Collection");
+                });
+
+            modelBuilder.Entity("PCM.Models.Tag", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("PCM.Models.Collection", b =>

@@ -12,8 +12,8 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240809134924_InitialCreate2")]
-    partial class InitialCreate2
+    [Migration("20240810180709_InitialCreate3")]
+    partial class InitialCreate3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,9 @@ namespace PCM.Migrations
 
                     b.Property<string>("CategoryName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CustomBoolean1Name")
                         .HasColumnType("nvarchar(max)");
@@ -88,10 +91,15 @@ namespace PCM.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("CollectionId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Collections");
                 });
@@ -102,8 +110,17 @@ namespace PCM.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Author")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("CollectionId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CollectionName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CustomBoolean1Value")
                         .HasColumnType("nvarchar(max)");
@@ -150,20 +167,12 @@ namespace PCM.Migrations
                     b.Property<string>("CustomString3Value")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("ItemId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Tag")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ItemId");
 
                     b.HasIndex("CollectionId");
-
-                    b.HasIndex("ItemId1");
 
                     b.ToTable("Items");
                 });
@@ -178,25 +187,18 @@ namespace PCM.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("TagId1")
-                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("TagId");
 
-                    b.HasIndex("ItemId")
-                        .IsUnique();
-
-                    b.HasIndex("TagId1");
+                    b.HasIndex("ItemId");
 
                     b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("PCM.Models.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -213,6 +215,10 @@ namespace PCM.Migrations
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -221,9 +227,20 @@ namespace PCM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PCM.Models.Collection", b =>
+                {
+                    b.HasOne("PCM.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PCM.Models.Item", b =>
@@ -234,24 +251,16 @@ namespace PCM.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PCM.Models.Item", null)
-                        .WithMany("Items")
-                        .HasForeignKey("ItemId1");
-
                     b.Navigation("Collection");
                 });
 
             modelBuilder.Entity("PCM.Models.Tag", b =>
                 {
                     b.HasOne("PCM.Models.Item", "Item")
-                        .WithOne("tag")
-                        .HasForeignKey("PCM.Models.Tag", "ItemId")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("PCM.Models.Tag", null)
-                        .WithMany("Tags")
-                        .HasForeignKey("TagId1");
 
                     b.Navigation("Item");
                 });
@@ -259,19 +268,6 @@ namespace PCM.Migrations
             modelBuilder.Entity("PCM.Models.Collection", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("PCM.Models.Item", b =>
-                {
-                    b.Navigation("Items");
-
-                    b.Navigation("tag")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("PCM.Models.Tag", b =>
-                {
-                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

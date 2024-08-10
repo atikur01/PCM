@@ -12,28 +12,15 @@ namespace PCM.Controllers
     public class ItemController : Controller
     {
         private readonly AppDbContext _context;
-        // Example in-memory storage of tags for demonstration purposes
-        private static List<string> _tags = new List<string> { "example", "tag", "test" };
 
         public ItemController(AppDbContext context)
         {
             _context = context;
         }
 
-        //public IActionResult Index(Guid collectionId)
-        //{
-
-        //    var items = _context.Items
-        //        .Where(i => i.CollectionId == collectionId)
-        //        .Include(i => i.Collection)
-        //        .ToList();
-        //    ViewBag.CollectionId = collectionId;
-        //    return View(items);
-        //}
-
         public IActionResult Create(Guid collectionId)
         {
-            var AllTagNames = _context.Tags.Select(tag => tag.Name).ToList();
+            var AllTagNames = _context.Tags.Select(tag => tag.Name).Distinct().ToList();
             ViewBag.AllTagNames = AllTagNames;
 
             ViewBag.CollectionId = collectionId;
@@ -43,55 +30,66 @@ namespace PCM.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create( Item item )
+        public async Task<IActionResult> Create(Item item)
         {
+            // Generate new Guid for ItemId and set creation timestamp
             item.ItemId = Guid.NewGuid();
-            _context.Items.Add(item);
+            item.CreatedAt = DateTime.Now;
 
-            int count = 0;  
-            foreach (var str in item.tags)
+            // Retrieve collection and associated user details
+            var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == item.CollectionId);
+            if (collection == null)
             {
-                if (count == 0) 
-                { 
-                    count++;
-                    continue;
+                return NotFound("Collection not found.");
+            }
+                
+            item.CollectionName = collection.Name;
 
-                }
-                else
-                {
-                    List<string> tags = JsonConvert.DeserializeObject<List<string>>(str);
+            collection.TotalItems++;
+            _context.Collections.Update(collection);
 
-                    // Output the list
-                    foreach (var tag in tags)
-                    {
-                        _context.Tags.Add(new Tag
-                        {
-                            TagId = Guid.NewGuid(),
-                            ItemId = item.ItemId,
-                            Name = tag
-
-                        });
-                    }
-
-
-                }
-
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == collection.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
             }
 
+            item.Author = user.Name;
+
+            // Add the item to the context
+            _context.Items.Add(item);
+
+            // Process tags, skipping the first one
+            foreach (var str in item.tags.Skip(1))
+            {
+                var tags = JsonConvert.DeserializeObject<List<string>>(str);
+                foreach (var tag in tags)
+                {
+                    _context.Tags.Add(new Tag
+                    {
+                        TagId = Guid.NewGuid(),
+                        ItemId = item.ItemId,
+                        Name = tag
+                    });
+                }
+            }
+
+            // Save changes to the database
             await _context.SaveChangesAsync();
 
+            // Redirect to the details page of the collection
             return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
-
         }
 
         public async Task<IActionResult> Edit(Guid id)
         {
-            var AllTagNames = await _context.Tags.Select(tag => tag.Name).ToListAsync();
+            var AllTagNames = await _context.Tags.Select(tag => tag.Name).Distinct().ToListAsync();
             ViewBag.AllTagNames = AllTagNames;
 
             var CurrentItemsTags = await _context.Tags
                           .Where(t => t.ItemId == id)
                           .Select(t => t.Name)
+                          .Distinct()
                           .ToListAsync();
 
             ViewBag.CurrentItemsTags = CurrentItemsTags;

@@ -5,10 +5,13 @@ namespace PCM.Models
     public class Tag
     {
         [Key]
-        public Guid TagId { get; set; }       
-  
-        public string? Name { get; set; }     
+        public Guid TagId { get; set; }   
+        
+        public Guid ItemId { get; set; }   
+        
+        public Item? Item { get; set; } 
 
-        public Guid? ItemId { get; set; }  
+        public string? Name { get; set; }     
+ 
     }
 }

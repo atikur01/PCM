@@ -69,8 +69,9 @@
         <tr>
             <th>Item Id</th>
             <th>Name</th>
+            <th>Creation Date</th>
         
-              
+
 
             @if (!string.IsNullOrEmpty(Model.CustomString1Name))
             {
@@ -91,6 +92,8 @@
             <tr>
                 <td>@item.ItemId</td>
                 <td>@item.Name</td>
+
+                <td>@item.CreatedAt</td>    
                
 
                 @if (!string.IsNullOrEmpty(Model.CustomString1Name))
@@ -121,7 +124,9 @@
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#itemTable').DataTable();
+            $('#itemTable').DataTable({
+                "order": [[2, "desc"]]
+            });
         });
     </script>
 }

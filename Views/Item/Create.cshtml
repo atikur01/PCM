@@ -25,7 +25,7 @@
 
     <div class="form-group">
         <label for="Tags">Tags</label>
-        <input name='tags' id="tagsInput" placeholder='Type something' class="form-control">
+        <input name='tags' id="tagsInput" placeholder='Type something' class="form-control" required>
     </div>
 
     
@@ -175,6 +175,9 @@
                 whitelist: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(AllTagNames)),
                 enforceWhitelist: false,
                 editTags: 1  // enable editing of tags with a single click
+
+                
+
             });
 
             // Preload existing tags

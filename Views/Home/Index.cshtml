@@ -1,51 +1,128 @@
-﻿@{
+﻿@model PCM.ViewModels.HomeViewModel
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
- <div class="container mt-4">
-    <!-- Latest Items Section -->
-    <div class="mb-5">
-      <h2>Latest Items</h2>
-      <div class="row">
-        <!-- Example Item -->
-        <div class="col-md-4">
-          <div class="card mb-4">
-            <img src="path/to/item-image.jpg" class="card-img-top" alt="Item Image">
-            <div class="card-body">
-              <h5 class="card-title">Item Title</h5>
-              <p class="card-text">Brief description or snippet...</p>
-              <a href="/items/1" class="btn btn-primary">View Item</a>
-            </div>
-          </div>
+<div class="container mt-5">
+    <!-- Most Recently Added Items -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Recently Added Items</h2>
         </div>
-        <!-- More items dynamically generated -->
-      </div>
     </div>
 
-    <!-- Top 5 Largest Collections Section -->
-    <div class="mb-5">
-      <h2>Top 5 Largest Collections</h2>
-      <ul class="list-group">
-        <!-- Example Collection -->
-        <li class="list-group-item">
-          <h5 class="mb-1">Collection Name</h5>
-          <small>Number of Items: 123</small>
-          <p class="mb-1">Brief description of the collection...</p>
-          <a href="/collections/1" class="btn btn-secondary">View Collection</a>
-        </li>
-        <!-- More collections dynamically generated -->
-      </ul>
+    <div class="row">
+
+        @if(Model.Items.Count == 0)
+        {
+            <div class="col">
+                <p>No items found.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var item in Model.Items)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="item_page_1.html" class="text-decoration-none">@item.Name</a>
+                            </h5>
+                            <p class="card-text">
+                                Collection: <a href="collection_page_1.html" class="text-decoration-none">@item.CollectionName</a>
+                            </p>
+                            <p class="card-text">Author: @item.Author</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        
     </div>
 
-    <!-- Tag Cloud Section -->
-    <div class="mb-5">
-      <h2>Tag Cloud</h2>
-      <div class="d-flex flex-wrap">
-        <!-- Example Tag -->
-        <a href="/tags/tag1" class="badge badge-primary m-1" style="font-size: 1.2em;">Tag1</a>
-        <a href="/tags/tag2" class="badge badge-secondary m-1" style="font-size: 1em;">Tag2</a>
-        <a href="/tags/tag3" class="badge badge-success m-1" style="font-size: 1.5em;">Tag3</a>
-        <!-- More tags dynamically generated -->
-      </div>
+    <!-- Top 5 Largest Collections -->
+    <div class="row mb-4">
+
+        <div class="col">
+            <h2>Top 5 Largest Collections</h2>
+        </div>
     </div>
-  </div>
+
+    <div class="row">
+
+        @if(Model.Collections.Count == 0)
+        {
+            <div class="col">
+                <p>No collections found.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var collection in Model.Collections)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="collection_page_1.html" class="text-decoration-none">@collection.Name</a>
+                            </h5>
+                            <p class="card-text">Number of items: @collection.TotalItems</p>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+        }
+
+       
+        
+
+    </div>
+
+    <!-- Tag Cloud -->
+    <div class="row">
+        <div class="col">
+            <h2>Tag Cloud</h2>
+            <br />
+            <div class="d-flex flex-wrap">
+
+                @if (@Model.Tags.Count == 0)
+                {
+                    <p>No tags found.</p>
+                }
+                else
+                {
+                    var tagColors = new Dictionary<string, string>
+                    {
+                        { "Tag1", "primary" },
+                        { "Tag2", "secondary" },
+                        { "Tag3", "success" },
+                        { "Tag4", "danger" },
+                        { "Tag5", "warning" },
+                        { "Tag6", "info" },
+                        { "Tag7", "dark" }
+                      
+                    };
+
+                    foreach (var tag in Model.Tags)
+                    {
+                        // Get the color for the current tag, default to "primary" if not found
+                        var color = tagColors[tag.Key];
+
+                        <a href="/tags/@tag" class="badge bg-@color m-1 text-decoration-none text-white" style="font-size: 1.2em;">
+                            @tag.Value
+                        </a>
+
+                    }
+                }
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<br />

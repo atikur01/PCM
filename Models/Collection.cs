@@ -3,11 +3,15 @@
     public class Collection
     {
         public Guid CollectionId { get; set; }
+        public Guid UserId { get; set; }
+        public User? User { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
-        public string? UserId { get; set; }
         public string? CategoryName { get; set; }
+        public DateTime CreatedAt { get; set; } 
+
+        public int? TotalItems { get; set; } 
 
         // Custom Field Names
         public string? CustomString1Name { get; set; }

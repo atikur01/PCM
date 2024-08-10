@@ -22,23 +22,34 @@
         <thead>
             <tr>
                 <th><input type="checkbox" id="selectAll" /></th>
-                <th>Id</th>
+                <th>User Id</th>
                 <th>Email</th>
                 <th>Status</th>
                 <th>Role</th>
+                <th>Registration Date</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var user in Model)
             {
                 <tr>
-                    <td><input type="checkbox" class="select-user" value="@user.Id" /></td>
-                    <td>@user.Id</td>
+                    <td><input type="checkbox" class="select-user" value="@user.UserId" /></td>
+                    <td>@user.UserId</td>
                     <td>@user.Email</td>
-                    <td id="status-@user.Id">
+                    <td id="status-@user.UserId">
                         @(user.IsBlocked ? "Blocked" : "Active")
                     </td>
-                    <td id="role-@user.Id">@user.Role</td>
+                    <td id="role-@user.UserId">@user.Role</td>
+
+                    <td>@user.CreatedAt</td>
+
+                    <td>
+                        <a href="/Collection/IndexByUserID?userid=@user.UserId" class="btn btn-primary">View Collection</a>
+                    </td>
+
+                    
+
                 </tr>
             }
         </tbody>
@@ -57,7 +68,8 @@
                 "info": true,
                 "columnDefs": [
                     { "orderable": false, "targets": 0 }
-                ]
+                ],
+                "order": [[5, "desc"]] // Sort by the 6th column (index 5) in descending order
             });
 
             $('#selectAll').on('click', function () {

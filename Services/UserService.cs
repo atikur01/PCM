@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PCM.Data;
 using PCM.Models;
@@ -16,15 +17,24 @@ namespace PCM.Services
             _passwordHasher = new PasswordHasher<object>();
         }
 
-        public async Task<User> RegisterUserAsync(string email, string password)
+        public async Task<User> RegisterUserAsync(string email, string password, string Name )
         {
+            var isexist = await GetUserByEmailAsync(email);
+            
+            if (isexist != null)
+            {
+                return null;
+            }
+
             var passwordHash = HashPassword(password);
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                Name = Name,
                 Email = email,
                 PasswordHash = passwordHash,
-                Role = UserRole.User
+                Role = UserRole.User,
+                CreatedAt = DateTime.Now    
             };
 
             _context.Users.Add(user);
@@ -36,6 +46,12 @@ namespace PCM.Services
         public async Task<User> AuthenticateUserAsync(string Email, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email);
+
+            if(user == null)
+            {
+                return null;
+            }   
+
 
             user.IsActive = true;
 
@@ -68,7 +84,7 @@ namespace PCM.Services
 
         public async Task BlockUsersAsync(List<Guid> userIds)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            var users = await _context.Users.Where(u => userIds.Contains(u.UserId)).ToListAsync();
             foreach (var user in users)
             {
                 user.IsBlocked = true;
@@ -79,7 +95,7 @@ namespace PCM.Services
 
         public async Task UnblockUsersAsync(List<Guid> userIds)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            var users = await _context.Users.Where(u => userIds.Contains(u.UserId)).ToListAsync();
             foreach (var user in users)
             {
                 user.IsBlocked = false;
@@ -89,14 +105,14 @@ namespace PCM.Services
 
         public async Task DeleteUsersAsync(List<Guid> userIds)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            var users = await _context.Users.Where(u => userIds.Contains(u.UserId)).ToListAsync();
             _context.Users.RemoveRange(users);
             await _context.SaveChangesAsync();
         }
 
         public async Task MakeAdminsAsync(List<Guid> userIds)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            var users = await _context.Users.Where(u => userIds.Contains(u.UserId)).ToListAsync();
             foreach (var user in users)
             {
                 user.Role = "Admin";
@@ -106,7 +122,7 @@ namespace PCM.Services
 
         public async Task RemoveAdminsAsync(List<Guid> userIds)
         {
-            var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            var users = await _context.Users.Where(u => userIds.Contains(u.UserId)).ToListAsync();
             foreach (var user in users)
             {
                 user.Role = UserRole.User;
@@ -116,7 +132,7 @@ namespace PCM.Services
 
         public async Task LogoutAsync(Guid id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
 
             user.IsActive = false;
 
@@ -130,7 +146,14 @@ namespace PCM.Services
         {
             // Retrieve the user by ID asynchronously
             return await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+                .FirstOrDefaultAsync(u => u.UserId == id);
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<bool> IsAdminAsync(Guid id)

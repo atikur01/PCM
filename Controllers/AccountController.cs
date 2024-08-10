@@ -17,14 +17,15 @@ namespace PCM.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(string email, string password)
+        public async Task<IActionResult> Register(string email, string password , string Name)
         {
+
             if (ModelState.IsValid)
             {
-                var user = await _userService.RegisterUserAsync(email, password);
+                var user = await _userService.RegisterUserAsync(email, password , Name);
                 if (user == null)
                 {
-                    ModelState.AddModelError("", "Registration failed. Please try again.");
+                    ModelState.AddModelError("", "This email is already registered.");
                     return View();
                 }
                 return RedirectToAction("Login");
@@ -33,7 +34,12 @@ namespace PCM.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login() => View();
+        public IActionResult Login() 
+        {
+          
+            return View();
+        }
+        
 
         [HttpPost]
         public async Task<IActionResult> Login(string Email, string password)
@@ -46,7 +52,7 @@ namespace PCM.Controllers
                 return View();
             }
 
-            AddSessionData(user.Id, user.Email, user.Role, user.IsBlocked.ToString());
+            AddSessionData(user.UserId, user.Name , user.Email, user.Role, user.IsBlocked.ToString());
 
             if (user.Role == UserRole.Admin)
             {
@@ -54,14 +60,14 @@ namespace PCM.Controllers
             }
             if (user.Role == UserRole.User)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("IndexByUserID", "Collection" , new { userid = user.UserId });
             }
 
             return View();
         }
 
 
-        public void AddSessionData(Guid id, string email, string role, string isBlocked)
+        public void AddSessionData(Guid id, string name, string email, string role, string isBlocked)
         {
             HttpContext.Session.SetString("Id", id.ToString());
             HttpContext.Session.SetString("Email", email);
