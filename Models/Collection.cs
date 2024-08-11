@@ -9,7 +9,7 @@
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
         public string? CategoryName { get; set; }
-        public DateTime CreatedAt { get; set; } 
+        public DateTime? CreatedAt { get; set; } 
 
         public int? TotalItems { get; set; } 
 

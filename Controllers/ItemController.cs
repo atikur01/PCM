@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using PCM.Data;
 using PCM.Models;
-using Serilog;
+using PCM.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PCM.Controllers
 {
@@ -18,37 +20,48 @@ namespace PCM.Controllers
             _context = context;
         }
 
-        public IActionResult Create(Guid collectionId)
+        public async Task<IActionResult> Create(Guid collectionId)
         {
-            var AllTagNames = _context.Tags.Select(tag => tag.Name).Distinct().ToList();
-            ViewBag.AllTagNames = AllTagNames;
+            var allTagNames = await  _context.Tags.Select(tag => tag.Name).Distinct().ToListAsync();
+            ViewBag.AllTagNames = allTagNames;
 
-            ViewBag.CollectionId = collectionId;
-            var collection = _context.Collections.FirstOrDefault(c => c.CollectionId == collectionId);
+            var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == collectionId);
+            if (collection == null)
+            {
+                return NotFound("Collection not found.");
+            }
 
-            return View(new Item { CollectionId = collectionId, Collection = collection });
+            var newItem = new Item
+            {
+                CollectionId = collectionId,
+                Collection = collection
+            };
+
+            return View(newItem);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(Item item)
         {
-            // Generate new Guid for ItemId and set creation timestamp
+            if (item == null)
+            {
+                return BadRequest("Invalid item data.");
+            }
+
             item.ItemId = Guid.NewGuid();
             item.CreatedAt = DateTime.Now;
 
-            // Retrieve collection and associated user details
-            var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == item.CollectionId);
+            var collection = await _context.Collections.FindAsync(item.CollectionId);
             if (collection == null)
             {
                 return NotFound("Collection not found.");
             }
-                
-            item.CollectionName = collection.Name;
 
+            item.CollectionName = collection.Name;
             collection.TotalItems++;
             _context.Collections.Update(collection);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == collection.UserId);
+            var user = await _context.Users.FindAsync(collection.UserId);
             if (user == null)
             {
                 return NotFound("User not found.");
@@ -56,11 +69,82 @@ namespace PCM.Controllers
 
             item.Author = user.Name;
 
-            // Add the item to the context
             _context.Items.Add(item);
 
-            // Process tags, skipping the first one
-            foreach (var str in item.tags.Skip(1))
+            // Process and add tags, skipping the first tag in the list
+            ProcessTags(item);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+        }
+
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            var allTagNames = await _context.Tags.Select(tag => tag.Name).Distinct().ToListAsync();
+            ViewBag.AllTagNames = allTagNames;
+
+            var currentItemsTags = await _context.Tags
+                .Where(t => t.ItemId == id)
+                .Select(t => t.Name)
+                .Distinct()
+                .ToListAsync();
+            ViewBag.CurrentItemsTags = currentItemsTags;
+
+            var item = await _context.Items.FindAsync(id);
+            if (item == null)
+            {
+                return NotFound("Item not found.");
+            }
+
+            var collection = await _context.Collections.FindAsync(item.CollectionId);
+            ViewBag.Collection = collection;
+
+            var user = await _context.Users.FindAsync(collection.UserId);
+
+            ViewBag.CollectionName = collection.Name;   
+            ViewBag.CreatedAt = item.CreatedAt; 
+
+            return View(item);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(Item item)
+        {
+            if (item == null)
+            {
+                return BadRequest("Invalid item data.");
+            }
+
+            _context.Tags.RemoveRange(_context.Tags.Where(t => t.ItemId == item.ItemId));
+            ProcessTags(item);
+
+            _context.Items.Update(item);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+        }
+
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var item = await _context.Items.FindAsync(id);
+            if (item == null)
+            {
+                return NotFound("Item not found.");
+            }
+
+            _context.Items.Remove(item);
+
+            var tags = await _context.Tags.Where(t => t.ItemId == id).ToListAsync();
+            _context.Tags.RemoveRange(tags);
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+        }
+
+        private void ProcessTags(Item item)
+        {
+            foreach (var str in item.tags.Skip(1)) // Skip the first tag
             {
                 var tags = JsonConvert.DeserializeObject<List<string>>(str);
                 foreach (var tag in tags)
@@ -73,89 +157,38 @@ namespace PCM.Controllers
                     });
                 }
             }
-
-            // Save changes to the database
-            await _context.SaveChangesAsync();
-
-            // Redirect to the details page of the collection
-            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
         }
 
-        public async Task<IActionResult> Edit(Guid id)
+        public async Task<IActionResult> Details(Guid id)
         {
-            var AllTagNames = await _context.Tags.Select(tag => tag.Name).Distinct().ToListAsync();
-            ViewBag.AllTagNames = AllTagNames;
-
-            var CurrentItemsTags = await _context.Tags
-                          .Where(t => t.ItemId == id)
-                          .Select(t => t.Name)
-                          .Distinct()
-                          .ToListAsync();
-
-            ViewBag.CurrentItemsTags = CurrentItemsTags;
-
-            var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == id);
-
-            var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == item.CollectionId);
-            ViewBag.Collection = collection;
-
-            return View(item);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Edit(Item item)
-        {
-            int count = 0;
-            foreach (var str in item.tags)
+            var item = await _context.Items.FindAsync(id);
+            if (item == null)
             {
-                if (count == 0)
-                {
-                    count++;
-                    continue;
-
-                }
-                else
-                {
-                    _context.Tags.RemoveRange(_context.Tags.Where(t => t.ItemId == item.ItemId));   
-
-                    List<string> tags = JsonConvert.DeserializeObject<List<string>>(str);
-
-                    // Output the list
-                    foreach (var tag in tags)
-                    {
-                        _context.Tags.Add(new Tag
-                        {
-                           
-                            ItemId = item.ItemId,
-                            Name = tag
-
-                        });
-                    }
-                }
+                return NotFound("Item not found.");
             }
 
-            ViewBag.CollectionId = item.CollectionId;   
-            _context.Items.Update(item);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+            var tags = await _context.Tags
+                .Where(t => t.ItemId == id)
+                .Select(t => t.Name)
+                .Distinct()
+                .ToListAsync();
+            ViewBag.Tags = tags;
 
-        }
+            var collection = await _context.Collections.FindAsync(item.CollectionId);
 
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == id);
-            _context.Items.Remove(item);
+            var user = await _context.Users.FindAsync(collection.UserId);
 
-            var tags = await _context.Tags.Where(t => t.ItemId == id).ToListAsync();
-            _context.Tags.RemoveRange(tags);
+            var ItemDetailsViewModel = new ItemDetailsViewModel
+            {
+                item = item,
+                collection = collection,
+                AuthorName = user.Name  
+            };  
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
-        }
+           
 
-
-
-
+            return View(ItemDetailsViewModel);
+        }   
 
     }
 }

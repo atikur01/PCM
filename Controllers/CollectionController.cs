@@ -26,9 +26,18 @@ namespace PCM.Controllers
 
         public IActionResult Index()
         {
-            var collections = _context.Collections.Include(c => c.Items).ToList();
+            var role = HttpContext.Session.GetString("Role");    
+            if(role == "Admin")
+            {
+                return RedirectToAction("ManageUsers", "Admin");
+            }
+
+            var userid  = HttpContext.Session.GetString("Id");
+
+            if(userid == null) return RedirectToAction("Login", "Account"); 
             
-            return View(collections);
+             return RedirectToAction("IndexByUserID", new { userid = userid });
+
         }
 
         public async Task<IActionResult> IndexByUserID(Guid userid)
@@ -80,9 +89,11 @@ namespace PCM.Controllers
 
         }
 
-        public IActionResult Details(Guid id)
+        public async Task<IActionResult>  Details(Guid id)
         {
-            var collection = _context.Collections.Include(c => c.Items).FirstOrDefault(c => c.CollectionId == id);
+
+
+            var collection =await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
             if (collection == null)
             {
                 return NotFound();
@@ -112,7 +123,7 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Delete(Guid id)
         {
-            var collection = _context.Collections.FirstOrDefault(c => c.CollectionId == id);
+            var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == id);
             await _cloudinaryUploader.RemoveImageAsync(collection.ImageUrl);
             _context.Collections.Remove(collection);
             _context.SaveChangesAsync();
@@ -123,7 +134,16 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Edit(Guid id)
         {
+            var userId = await _context.Collections
+                .Where(c => c.CollectionId == id)
+                .Select(c => c.UserId)
+                .FirstOrDefaultAsync();
+
+            ViewBag.UserId = userId;
+            
+
             var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+            ViewBag.CreatedAt = collection.CreatedAt;
 
             return View(collection);
         }
@@ -141,29 +161,20 @@ namespace PCM.Controllers
                     string imageUrl = await Upload(Image);
                     collection.ImageUrl = imageUrl;
                 }
+                // Mark the entity as modified
+                _context.Entry(collection).State = EntityState.Modified;
 
-                _context.Update(collection);
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (! CollectionExists(collection.CollectionId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                Log.Information(ex.Message.ToString() ); 
             }
+
             return RedirectToAction(nameof(Index));
 
         }
 
-        private bool CollectionExists(Guid id)
-        {
-            return _context.Collections.Any(e => e.CollectionId == id);
-        }
 
     }
 }

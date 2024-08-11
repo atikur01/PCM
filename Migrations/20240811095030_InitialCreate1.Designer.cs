@@ -12,7 +12,7 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240810161333_InitialCreate1")]
+    [Migration("20240811095030_InitialCreate1")]
     partial class InitialCreate1
     {
         /// <inheritdoc />
@@ -91,6 +91,9 @@ namespace PCM.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TotalItems")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -165,9 +168,6 @@ namespace PCM.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Tag")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ItemId");

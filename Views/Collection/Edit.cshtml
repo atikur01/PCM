@@ -1,5 +1,13 @@
 ﻿@model Collection
 
+
+﻿@{
+    ViewData["Title"] = "Edit";
+    var UserId = ViewBag.UserId;
+    var CreatedAt = ViewBag.CreatedAt;
+}
+
+
 @section Styles {
        <script src="https://cdn.tiny.cloud/1/4bsti5dzdlphqqvhtqxpppmzohh6pjosn35phr12bcpx4ax0/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
        <script>
@@ -12,6 +20,22 @@
 <h1>Edit Collection</h1>
 
 <form asp-action="Edit" enctype="multipart/form-data" method="post">
+
+    <div class="form-group">
+        <input asp-for="UserId" value="@UserId" class="form-control d-none" />
+    </div>
+
+    <div class="form-group">
+        <input asp-for="CreatedAt" value="@CreatedAt" type="text" class="form-control d-none" />
+    </div>
+
+    <div class="form-group">
+        <input asp-for="TotalItems" value="@Model.TotalItems" class="form-control d-none" />
+    </div>
+
+
+
+
 
     <div class="form-group">
         <label asp-for="CollectionId">Collection Id</label>

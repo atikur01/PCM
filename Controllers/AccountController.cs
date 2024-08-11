@@ -67,9 +67,10 @@ namespace PCM.Controllers
         }
 
 
-        public void AddSessionData(Guid id, string name, string email, string role, string isBlocked)
+        public async void AddSessionData(Guid id, string name, string email, string role, string isBlocked)
         {
             HttpContext.Session.SetString("Id", id.ToString());
+            HttpContext.Session.SetString("Name", name.ToString()); 
             HttpContext.Session.SetString("Email", email);
             HttpContext.Session.SetString("Role", role);
             HttpContext.Session.SetString("IsBlocked", isBlocked);

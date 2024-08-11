@@ -5,6 +5,10 @@
     var CurrentItemsTags = ViewBag.CurrentItemsTags as List<string>;
     var AllTagNames = ViewBag.AllTagNames as List<string>;
 
+    var Author = ViewBag.Author as string;  
+    var CreatedAt = ViewBag.CreatedAt;  
+    var CollectionName = ViewBag.CollectionName as string;  
+
 
 }
 
@@ -21,7 +25,10 @@
         <input asp-for="ItemId" class="form-control" readonly />
     </div>  
 
-    <input type="hidden" asp-for="CollectionId" id="collectionId" />
+    <input asp-for="CollectionId" id="collectionId" class="form-control d-none" />
+    <input  asp-for="Author" id="@Author" class="form-control d-none"/>
+    <input asp-for="CreatedAt" id="@CreatedAt" class="form-control d-none" />
+    <input asp-for="CollectionName" id="@CollectionName" class="form-control d-none" />
 
     <div class="form-group">
         <label for="Name">Name</label>

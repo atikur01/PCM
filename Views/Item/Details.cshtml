@@ -1,0 +1,232 @@
+﻿@model PCM.ViewModels.ItemDetailsViewModel
+@{
+    ViewData["Title"] = "Details";
+    var tags = ViewBag.Tags as List<string>;    
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title">Item Details</h5>
+                    <button id="like-button" class="btn btn-outline-primary">
+                        Like <span id="like-count">0</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Item details section -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Item ID:</strong> <span id="item-id">@Model.item.ItemId</span></p> 
+                            <p><strong>Item Name:</strong> <span id="item-name">@Model.item.Name</span></p>
+                            <p><strong>Created By:</strong> <span id="author">@Model.item.Author</span></p>
+                            <p><strong>Collection ID:</strong> <span id="collectionid">@Model.item.CollectionId</span></p>
+                            <p><strong>Collection Name:</strong> <span id="collection-name">@Model.collection.Name</span></p>
+
+                            @if (Model.collection.ImageUrl == "File is empty.")
+                            {
+                                <p><strong>Collection Logo:</strong> <span id="collection-Logo"><img src="https://res.cloudinary.com/dafywr2nr/image/upload/v1723141221/vezrv9aufcei3w7jjxgu.png" style="width: 200px; height: 50px;" alt="Image" /></p>                               
+                            }
+                            else
+                            {
+                                <p><strong>Collection Logo:</strong> <span id="collection-Logo"><img src="@Model.collection.ImageUrl" style="width: 50px; height: 50px;" alt="Image" /></p>
+                            }    
+                        </div>
+
+                        <div class="col-md-6">
+
+                            @if (Model.collection.CustomString1Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomString1Name:</strong> <span id="custom-string-1">@Model.item.CustomString1Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomString2Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomString2Name:</strong> <span id="custom-string-2">@Model.item.CustomString2Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomString3Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomString3Name:</strong> <span id="custom-string-3">@Model.item.CustomString3Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomInt1Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomInt1Name:</strong> <span id="custom-int-1">@Model.item.CustomInt1Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomInt2Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomInt2Name:</strong> <span id="custom-int-2">@Model.item.CustomInt2Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomInt3Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomInt3Name:</strong> <span id="custom-int-3">@Model.item.CustomInt3Value</span></p>
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+
+                        <div class="col-md-6">
+
+                            @if(Model.collection.CustomMultilineText1Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomMultilineText1Name</strong></p>
+                                <p id="custom-multiline-1" >@Html.Raw(@Model.item.CustomMultilineText1Value.Replace("\n", "<br/>")) </p>
+                            }
+
+                            @if (Model.collection.CustomMultilineText2Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomMultilineText2Name</strong></p>
+                                <p id="custom-multiline-2">@Html.Raw(@Model.item.CustomMultilineText2Value.Replace("\n", "<br/>"))</p>
+                            }
+
+                            @if (Model.collection.CustomMultilineText3Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomMultilineText3Name</strong></p>
+                                <p id="custom-multiline-3">@Html.Raw(@Model.item.CustomMultilineText3Value.Replace("\n", "<br/>"))</p>
+                            }
+
+                        </div>
+
+                        <div class="col-md-6">
+                            @if (Model.collection.CustomBoolean1Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomBoolean1Name:</strong> <span id="custom-boolean-1">@Model.item.CustomBoolean1Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomBoolean2Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomBoolean2Name:</strong> <span id="custom-boolean-2">@Model.item.CustomBoolean2Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomBoolean3Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomBoolean3Name:</strong> <span id="custom-boolean-3">@Model.item.CustomBoolean3Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomDate1Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomDate1Name:</strong> <span id="custom-date-1">@Model.item.CustomDate1Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomDate2Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomDate2Name:</strong> <span id="custom-date-2">@Model.item.CustomDate2Value</span></p>
+                            }
+
+                            @if (Model.collection.CustomDate3Name != null)
+                            {
+                                <p><strong>@Model.collection.CustomDate3Name:</strong> <span id="custom-date-3">@Model.item.CustomDate3Value</span></p>
+                            }
+
+
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <p><strong>Created At:</strong> <span id="created-at">@Model.item.CreatedAt</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Tags section -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <p><strong>Tags:</strong></p>
+
+                            @if(tags != null)
+                            {
+                                foreach (var tag in tags)
+                                {
+                                    <span class="badge badge-success">@tag</span>
+                                }
+                            }
+                            else
+                            {
+                               <p>No tags Added</p>
+                            }   
+
+
+                       
+                        </div>
+                    </div>
+
+                    <!-- Comments section -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h5>Comments</h5>
+                            <ul class="list-group" id="comments-list">
+                                <li class="list-group-item">This is an interesting item! - User1</li>
+                                <li class="list-group-item">I love this collection! - User2</li>
+                                <li class="list-group-item">Great details provided. Thanks for sharing. - User3</li>
+                                <!-- More dummy comments can be added here -->
+                            </ul>
+                            <div class="input-group mt-3">
+                                <input type="text" id="comment-input" class="form-control" placeholder="Add a comment">
+                                <div class="input-group-append">
+                                    <button id="add-comment-button" class="btn btn-primary">Add Comment</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    
+
+    <script>
+        // Sample data for comments
+        let comments = [
+            "This is an interesting item! - User1",
+            "I love this collection! - User2",
+            "Great details provided. Thanks for sharing. - User3"
+        ];
+        let likeCount = 0;
+        let hasLiked = false;
+
+        // Function to render comments
+        function renderComments() {
+            const commentsList = $('#comments-list');
+            commentsList.empty();
+            comments.forEach(comment => {
+                commentsList.append(`<li class="list-group-item">${comment}</li>`);
+            });
+        }
+
+        // Function to handle adding a comment
+        $('#add-comment-button').click(function () {
+            const commentInput = $('#comment-input');
+            const commentText = commentInput.val().trim();
+            if (commentText) {
+                comments.push(commentText);
+                commentInput.val('');
+                renderComments();
+            }
+        });
+
+        // Function to handle like button
+        $('#like-button').click(function () {
+            if (!hasLiked) {
+                likeCount++;
+                $('#like-count').text(likeCount);
+                hasLiked = true;
+                $(this).removeClass('btn-outline-primary').addClass('btn-primary').prop('disabled', true);
+            }
+        });
+
+        // Initial render
+        renderComments();
+    </script>
+
+
+}
