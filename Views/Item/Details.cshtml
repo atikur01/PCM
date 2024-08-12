@@ -1,19 +1,37 @@
 ﻿@model PCM.ViewModels.ItemDetailsViewModel
-@{
-    ViewData["Title"] = "Details";
-    var tags = ViewBag.Tags as List<string>;    
-}
+
+
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-12">
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title">Item Details</h5>
-                    <button id="like-button" class="btn btn-outline-primary">
-                        Like <span id="like-count">0</span>
-                    </button>
+
+
+                
+                    @if (ViewBag.VisitorUserId == null || ViewBag.Liked==true)
+                    {
+                        <button id="like-button" class="btn btn-outline-primary" style="height: 3rem; font-size: 1.2rem;" disabled>
+                            Like <span id="like-count">@Model.ItemLikeCount.LikeCount</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button id="like-button" class="btn btn-outline-primary" style="height: 3rem; font-size: 1.2rem;">
+                            Like <span id="like-count">@Model.ItemLikeCount.LikeCount</span>
+                        </button>
+                    }
+
+                    
+
+                    
+
+
                 </div>
+
                 <div class="card-body">
                     <!-- Item details section -->
                     <div class="row">
@@ -26,11 +44,11 @@
 
                             @if (Model.collection.ImageUrl == "File is empty.")
                             {
-                                <p><strong>Collection Logo:</strong> <span id="collection-Logo"><img src="https://res.cloudinary.com/dafywr2nr/image/upload/v1723141221/vezrv9aufcei3w7jjxgu.png" style="width: 200px; height: 50px;" alt="Image" /></p>                               
+                                <p><strong>Collection Picture:</strong> <span id="collection-Logo"><img src="https://res.cloudinary.com/dafywr2nr/image/upload/v1723141221/vezrv9aufcei3w7jjxgu.png" style="width: 200px; height: 50px;" alt="Image" /></p>                               
                             }
                             else
                             {
-                                <p><strong>Collection Logo:</strong> <span id="collection-Logo"><img src="@Model.collection.ImageUrl" style="width: 50px; height: 50px;" alt="Image" /></p>
+                                <p><strong>Collection Picture:</strong> <span id="collection-Logo"><img src="@Model.collection.ImageUrl" style="width: 50px; height: 50px;" alt="Image" /></p>
                             }    
                         </div>
 
@@ -139,9 +157,9 @@
                         <div class="col-md-12">
                             <p><strong>Tags:</strong></p>
 
-                            @if(tags != null)
+                            @if(Model.Tags != null)
                             {
-                                foreach (var tag in tags)
+                                foreach (var tag in Model.Tags)
                                 {
                                     <span class="badge badge-success">@tag</span>
                                 }
@@ -214,18 +232,48 @@
             }
         });
 
-        // Function to handle like button
-        $('#like-button').click(function () {
-            if (!hasLiked) {
-                likeCount++;
-                $('#like-count').text(likeCount);
-                hasLiked = true;
-                $(this).removeClass('btn-outline-primary').addClass('btn-primary').prop('disabled', true);
-            }
-        });
+        // // Function to handle like button
+        // $('#like-button').click(function () {
+        //     if (!hasLiked) {
+        //         likeCount++;
+        //         $('#like-count').text(likeCount);
+        //         hasLiked = true;
+        //         $(this).removeClass('btn-outline-primary').addClass('btn-primary').prop('disabled', true);
+        //     }
+        // });
 
         // Initial render
         renderComments();
+    </script>
+
+
+    <script>
+        $(document).ready(function () {
+            $('#like-button').click(function () {
+                var button = $(this);
+
+                $.ajax({
+                    url: '@Url.Action("Like", "Item")',
+                    type: 'POST',
+                    data: {
+                        ItemId: '@Model.item.ItemId',
+                        VisitorUserID: '@ViewBag.VisitorUserId'
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $('#like-count').text(response.likeCount);
+                            button.prop('disabled', true);
+                            button.removeClass('btn-outline-primary').addClass('btn-primary');
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert("An error occurred while processing your request.");
+                    }
+                });
+            });
+        });
     </script>
 
 

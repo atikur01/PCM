@@ -8,6 +8,11 @@ namespace PCM.ViewModels
         public PCM.Models.Collection? collection { get; set; }  
         public Item? item { get; set; }  
         public string? AuthorName { get; set; } 
+        public Like? Like { get; set; }
+
+        public ItemLikeCount ItemLikeCount { get; set; }
+
+        public List<string>? Tags { get; set; }  
 
     }
 }

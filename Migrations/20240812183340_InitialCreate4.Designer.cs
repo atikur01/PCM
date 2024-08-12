@@ -12,8 +12,8 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240811095030_InitialCreate1")]
-    partial class InitialCreate1
+    [Migration("20240812183340_InitialCreate4")]
+    partial class InitialCreate4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace PCM.Migrations
                     b.Property<string>("CategoryName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CustomBoolean1Name")
@@ -175,6 +175,26 @@ namespace PCM.Migrations
                     b.HasIndex("CollectionId");
 
                     b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("PCM.Models.Like", b =>
+                {
+                    b.Property<Guid>("LikeID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ItemLikeCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("VisitorUserID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("LikeID");
+
+                    b.ToTable("Likes");
                 });
 
             modelBuilder.Entity("PCM.Models.Tag", b =>

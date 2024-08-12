@@ -39,7 +39,7 @@ namespace PCM.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CategoryName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     TotalItems = table.Column<int>(type: "int", nullable: true),
                     CustomString1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CustomString2Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -106,6 +106,25 @@ namespace PCM.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Likes",
+                columns: table => new
+                {
+                    LikeID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ItemLikeCount = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Likes", x => x.LikeID);
+                    table.ForeignKey(
+                        name: "FK_Likes_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
@@ -135,6 +154,11 @@ namespace PCM.Migrations
                 column: "CollectionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Likes_ItemId",
+                table: "Likes",
+                column: "ItemId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tags_ItemId",
                 table: "Tags",
                 column: "ItemId");
@@ -143,6 +167,9 @@ namespace PCM.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Likes");
+
             migrationBuilder.DropTable(
                 name: "Tags");
 

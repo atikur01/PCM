@@ -12,7 +12,7 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240811105534_InitialCreate2")]
+    [Migration("20240812150852_InitialCreate2")]
     partial class InitialCreate2
     {
         /// <inheritdoc />
@@ -177,6 +177,28 @@ namespace PCM.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("PCM.Models.Like", b =>
+                {
+                    b.Property<Guid>("LikeID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ItemLikeCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("VisitorUserID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("LikeID");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("Likes");
+                });
+
             modelBuilder.Entity("PCM.Models.Tag", b =>
                 {
                     b.Property<Guid>("TagId")
@@ -252,6 +274,15 @@ namespace PCM.Migrations
                         .IsRequired();
 
                     b.Navigation("Collection");
+                });
+
+            modelBuilder.Entity("PCM.Models.Like", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId");
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("PCM.Models.Tag", b =>

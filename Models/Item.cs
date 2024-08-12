@@ -15,7 +15,7 @@ namespace PCM.Models
         public string? CollectionName { get; set; }
 
         public string? Name { get; set; }
-    
+
         public Collection? Collection { get; set; }
 
 
@@ -40,15 +40,18 @@ namespace PCM.Models
         public string? CustomDate2Value { get; set; }
         public string? CustomDate3Value { get; set; }
 
-        public DateTime CreatedAt { get; set; } 
+        public DateTime CreatedAt { get; set; }
 
 
         [NotMapped]
         public List<Item> Items { get; set; }
 
-   
+
         [NotMapped]
         public List<string> tags { get; set; }
-        
+
+        [NotMapped]
+        public virtual ICollection<Like> Likes { get; set; }
+
     }
 }

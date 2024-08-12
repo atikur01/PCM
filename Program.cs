@@ -51,11 +51,11 @@ namespace PCM
 
 
             // Configure EF Core with SQL Server
-            //builder.Services.AddDbContext<AppDbContext>(options =>
-            //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer("Server=atikapps.com;Database=CollectionManagement;User Id=sa;Password=A@a11223344!;TrustServerCertificate=True;"));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            //builder.Services.AddDbContext<AppDbContext>(options =>
+            //    options.UseSqlServer("Server=167.99.127.42;Database=CollectionManagement;User Id=sa;Password=A@a11223344!;TrustServerCertificate=True;"));
 
             // Register UserService as a scoped dependency
             builder.Services.AddScoped<UserService>();
@@ -71,7 +71,7 @@ namespace PCM
                 options.Cookie.IsEssential = true;
             });
 
-            builder.Services.AddSession();
+            
 
 
             try

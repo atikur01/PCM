@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PCM.Data;
 
@@ -11,9 +12,11 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240812150409_InitialCreate1")]
+    partial class InitialCreate1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -174,20 +177,6 @@ namespace PCM.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("PCM.Models.ItemLikeCount", b =>
-                {
-                    b.Property<Guid>("ItemId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("LikeCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("ItemId");
-
-                    b.ToTable("ItemLikeCounts");
-                });
-
             modelBuilder.Entity("PCM.Models.Like", b =>
                 {
                     b.Property<Guid>("LikeID")
@@ -197,10 +186,15 @@ namespace PCM.Migrations
                     b.Property<Guid?>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("VisitorUserID")
+                    b.Property<int?>("ItemLikeCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("UserID")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("LikeID");
+
+                    b.HasIndex("ItemId");
 
                     b.ToTable("Likes");
                 });
@@ -280,6 +274,15 @@ namespace PCM.Migrations
                         .IsRequired();
 
                     b.Navigation("Collection");
+                });
+
+            modelBuilder.Entity("PCM.Models.Like", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId");
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("PCM.Models.Tag", b =>
