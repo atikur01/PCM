@@ -2,6 +2,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using PCM.ActionFilter;
 using PCM.Data;
+using PCM.Hubs;
 using PCM.Models;
 using PCM.Services;
 using Serilog;
@@ -21,7 +22,7 @@ namespace PCM
                 .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Error)  // Logs from System namespace
                 .Enrich.FromLogContext()  // Enrich logs with context information
                 .WriteTo.Seq("http://seq.atikapps.com:5341/")
-                .WriteTo.Console()             
+                .WriteTo.Console()
                 .CreateLogger();
 
             // Replace the default logging with Serilog
@@ -33,9 +34,9 @@ namespace PCM
                 options.Filters.Add<SerilogActionFilter>();
             });
 
-
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddSignalR(); // Add SignalR
 
             // Add CORS services
             builder.Services.AddCors(options =>
@@ -49,30 +50,24 @@ namespace PCM
                     });
             });
 
-
             // Configure EF Core with SQL Server
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            //builder.Services.AddDbContext<AppDbContext>(options =>
-            //    options.UseSqlServer("Server=167.99.127.42;Database=CollectionManagement;User Id=sa;Password=A@a11223344!;TrustServerCertificate=True;"));
-
             // Register UserService as a scoped dependency
             builder.Services.AddScoped<UserService>();
 
+            // Register CloudinaryUploader as a singleton
             builder.Services.AddSingleton<CloudinaryUploader>();
 
-
-            builder.Services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
+            // Add distributed memory cache and session services
+            builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-
-            
-
 
             try
             {
@@ -84,22 +79,25 @@ namespace PCM
                 if (!app.Environment.IsDevelopment())
                 {
                     app.UseExceptionHandler("/Home/Error");
-                    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                     app.UseHsts();
                 }
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();
                 app.UseRouting();
+
                 app.UseCors("AllowAll");
                 app.UseAuthorization();
-                app.UseSession();
+
+                app.UseSession(); // Ensure session is enabled before routing or SignalR
+
                 app.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-                app.Run();
+                app.MapHub<CommentHub>("/commentHub"); // Map SignalR hub
 
+                app.Run();
             }
             catch (Exception ex)
             {
@@ -109,8 +107,6 @@ namespace PCM
             {
                 Log.CloseAndFlush();
             }
-
         }
     }
-
 }

@@ -12,6 +12,7 @@ namespace PCM.Data
         public DbSet<Item> Items { get; set; }
         public DbSet<Tag> Tags { get; set; }
 
+        public DbSet<Comment> Comments { get; set; }
         public DbSet<Like> Likes { get; set; }  
 
         public DbSet<ItemLikeCount> ItemLikeCounts { get; set; }    

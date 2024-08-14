@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using PCM.Data;
 using PCM.Models;
 using PCM.ViewModels;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Create(Guid collectionId)
         {
-            var allTagNames = await  _context.Tags.Select(tag => tag.Name).Distinct().ToListAsync();
+            var allTagNames = await _context.Tags.Select(tag => tag.Name).Distinct().ToListAsync();
             ViewBag.AllTagNames = allTagNames;
 
             var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == collectionId);
@@ -104,8 +105,8 @@ namespace PCM.Controllers
 
             var user = await _context.Users.FindAsync(collection.UserId);
 
-            ViewBag.CollectionName = collection.Name;   
-            ViewBag.CreatedAt = item.CreatedAt; 
+            ViewBag.CollectionName = collection.Name;
+            ViewBag.CreatedAt = item.CreatedAt;
 
             return View(item);
         }
@@ -193,7 +194,7 @@ namespace PCM.Controllers
 
             Like likeobj = null;
 
-            if(like == null)
+            if (like == null)
             {
                 likeobj = new Like
                 {
@@ -204,20 +205,31 @@ namespace PCM.Controllers
 
 
             Guid VisitorUserId = Guid.NewGuid();
-                ;
-            if (HttpContext.Session.GetString("Id") == null)
+
+            try
             {
-                ViewBag.Liked = true;
+                if (HttpContext.Session.GetString("Id") == null)
+                {
+                    ViewBag.Liked = true;
+                }
+                else
+                {
+                    VisitorUserId = Guid.Parse(HttpContext.Session.GetString("Id"));
+                    ViewBag.VisitorUserId = VisitorUserId;
+                }
+
             }
-            else
+            catch (Exception)
             {
-                VisitorUserId = Guid.Parse(HttpContext.Session.GetString("Id"));
-                ViewBag.VisitorUserId = VisitorUserId;  
+                Log.Information("User not logged in");
             }
+
+            
+            
 
             var existingLike = await _context.Likes.AnyAsync(l => l.VisitorUserID == VisitorUserId && l.ItemId == id);
 
-            if(existingLike)
+            if (existingLike)
             {
                 ViewBag.Liked = true;
             }
@@ -240,6 +252,7 @@ namespace PCM.Controllers
                 AuthorName = item.Collection.User.Name,
                 Tags = tags,
                 Like = likeobj,
+                CommenterName = HttpContext.Session.GetString("Name"),
                 ItemLikeCount = new ItemLikeCount
                 {
                     ItemId = item.ItemId,
@@ -257,7 +270,7 @@ namespace PCM.Controllers
         public async Task<IActionResult> Like(Like like)
         {
             like.LikeID = Guid.NewGuid();
-            var itemid =  Guid.Parse(like.ItemId.ToString() ) ;   
+            var itemid = Guid.Parse(like.ItemId.ToString());
 
             var existingLike = await _context.Likes
                 .FirstOrDefaultAsync(l => l.VisitorUserID == like.VisitorUserID && l.ItemId == like.ItemId);
@@ -267,19 +280,20 @@ namespace PCM.Controllers
                 // Initialize the like count to zero for the new like
 
                 _context.Likes.Add(like);
-                
 
-                if(await _context.ItemLikeCounts.FirstOrDefaultAsync(l => l.ItemId == like.ItemId) == null)
+
+                if (await _context.ItemLikeCounts.FirstOrDefaultAsync(l => l.ItemId == like.ItemId) == null)
                 {
                     _context.ItemLikeCounts.Add(new ItemLikeCount
                     {
+                        ItemLikeCountId = Guid.NewGuid(),
                         ItemId = itemid,
                         LikeCount = 1
                     });
                 }
                 else
                 {
-                    _context.ItemLikeCounts.First(l => l.ItemId == like.ItemId).LikeCount++;    
+                    _context.ItemLikeCounts.First(l => l.ItemId == like.ItemId).LikeCount++;
                 }
 
                 await _context.SaveChangesAsync();

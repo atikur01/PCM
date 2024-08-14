@@ -12,8 +12,8 @@ using PCM.Data;
 namespace PCM.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240812150852_InitialCreate2")]
-    partial class InitialCreate2
+    [Migration("20240814063827_InitialCreate1")]
+    partial class InitialCreate1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -104,6 +104,33 @@ namespace PCM.Migrations
                     b.ToTable("Collections");
                 });
 
+            modelBuilder.Entity("PCM.Models.Comment", b =>
+                {
+                    b.Property<Guid>("CommentID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CommentID");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("Comments");
+                });
+
             modelBuilder.Entity("PCM.Models.Item", b =>
                 {
                     b.Property<Guid>("ItemId")
@@ -177,6 +204,25 @@ namespace PCM.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("PCM.Models.ItemLikeCount", b =>
+                {
+                    b.Property<Guid>("ItemLikeCountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("LikeCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("ItemLikeCountId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemLikeCounts");
+                });
+
             modelBuilder.Entity("PCM.Models.Like", b =>
                 {
                     b.Property<Guid>("LikeID")
@@ -185,9 +231,6 @@ namespace PCM.Migrations
 
                     b.Property<Guid?>("ItemId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("ItemLikeCount")
-                        .HasColumnType("int");
 
                     b.Property<Guid?>("VisitorUserID")
                         .HasColumnType("uniqueidentifier");
@@ -265,6 +308,15 @@ namespace PCM.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PCM.Models.Comment", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId");
+
+                    b.Navigation("Item");
+                });
+
             modelBuilder.Entity("PCM.Models.Item", b =>
                 {
                     b.HasOne("PCM.Models.Collection", "Collection")
@@ -274,6 +326,17 @@ namespace PCM.Migrations
                         .IsRequired();
 
                     b.Navigation("Collection");
+                });
+
+            modelBuilder.Entity("PCM.Models.ItemLikeCount", b =>
+                {
+                    b.HasOne("PCM.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("PCM.Models.Like", b =>

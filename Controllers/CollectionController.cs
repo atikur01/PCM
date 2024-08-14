@@ -16,7 +16,7 @@ namespace PCM.Controllers
 
         private readonly AppDbContext _context;
         private readonly CloudinaryUploader _cloudinaryUploader;
-     
+
 
         public CollectionController(AppDbContext context, CloudinaryUploader cloudinaryUploader)
         {
@@ -26,17 +26,17 @@ namespace PCM.Controllers
 
         public IActionResult Index()
         {
-            var role = HttpContext.Session.GetString("Role");    
-            if(role == "Admin")
+            var role = HttpContext.Session.GetString("Role");
+            if (role == "Admin")
             {
                 return RedirectToAction("ManageUsers", "Admin");
             }
 
-            var userid  = HttpContext.Session.GetString("Id");
+            var userid = HttpContext.Session.GetString("Id");
 
-            if(userid == null) return RedirectToAction("Login", "Account"); 
-            
-             return RedirectToAction("IndexByUserID", new { userid = userid });
+            if (userid == null) return RedirectToAction("Login", "Account");
+
+            return RedirectToAction("IndexByUserID", new { userid = userid });
 
         }
 
@@ -61,7 +61,7 @@ namespace PCM.Controllers
         [HttpGet]
         public IActionResult CreateByUserID(Guid userid)
         {
-            ViewBag.UserId = userid;    
+            ViewBag.UserId = userid;
             return View();
         }
 
@@ -71,17 +71,17 @@ namespace PCM.Controllers
         {
             string ImageUrl = await Upload(Image);
 
-            if(collection.Description == null)
+            if (collection.Description == null)
             {
                 collection.Description = "";
-            }   
+            }
 
             var htmlContent = Markdown.ToHtml(collection.Description);
             collection.Description = htmlContent;
             collection.CollectionId = Guid.NewGuid();
             collection.ImageUrl = ImageUrl;
             collection.CreatedAt = DateTime.Now;
-            collection.TotalItems = 0;  
+            collection.TotalItems = 0;
             _context.Collections.Add(collection);
             await _context.SaveChangesAsync();
             return RedirectToAction("IndexByUserID", new { userid = collection.UserId });
@@ -89,11 +89,11 @@ namespace PCM.Controllers
 
         }
 
-        public async Task<IActionResult>  Details(Guid id)
+        public async Task<IActionResult> Details(Guid id)
         {
 
 
-            var collection =await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+            var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
             if (collection == null)
             {
                 return NotFound();
@@ -101,7 +101,7 @@ namespace PCM.Controllers
             return View(collection);
         }
 
-        
+
 
 
         public async Task<string?> Upload(IFormFile file)
@@ -140,7 +140,7 @@ namespace PCM.Controllers
                 .FirstOrDefaultAsync();
 
             ViewBag.UserId = userId;
-            
+
 
             var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
             ViewBag.CreatedAt = collection.CreatedAt;
@@ -150,9 +150,9 @@ namespace PCM.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Collection collection,IFormFile Image)
+        public async Task<IActionResult> Edit(Collection collection, IFormFile Image)
         {
-     
+
             try
             {
                 // Upload image if exists
@@ -168,7 +168,7 @@ namespace PCM.Controllers
             }
             catch (Exception ex)
             {
-                Log.Information(ex.Message.ToString() ); 
+                Log.Information(ex.Message.ToString());
             }
 
             return RedirectToAction(nameof(Index));

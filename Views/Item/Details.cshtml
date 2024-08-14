@@ -174,24 +174,31 @@
                         </div>
                     </div>
 
-                    <!-- Comments section -->
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <h5>Comments</h5>
-                            <ul class="list-group" id="comments-list">
-                                <li class="list-group-item">This is an interesting item! - User1</li>
-                                <li class="list-group-item">I love this collection! - User2</li>
-                                <li class="list-group-item">Great details provided. Thanks for sharing. - User3</li>
-                                <!-- More dummy comments can be added here -->
-                            </ul>
-                            <div class="input-group mt-3">
-                                <input type="text" id="comment-input" class="form-control" placeholder="Add a comment">
-                                <div class="input-group-append">
-                                    <button id="add-comment-button" class="btn btn-primary">Add Comment</button>
-                                </div>
-                            </div>
+                    <div class="container mt-5">
+                        <h4>Comments</h4>
+                        <div id="commentsList" class="list-group">
+                            <!-- Comments will be dynamically added here -->
                         </div>
+
+                        @if(Model.CommenterName == null)
+                        {
+                            <div class="mt-3">
+                                <p>Please login to add a comment</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mt-3">
+                                <textarea id="commentMessage" class="form-control mt-2" placeholder="Your comment"></textarea>
+                                <button id="sendComment" class="btn btn-primary mt-2">Add Comment</button>
+                            </div>
+                        }
+
+                        
+
                     </div>
+
+
                 </div>
             </div>
         </div>
@@ -200,52 +207,7 @@
 
 @section Scripts
 {
-    
-
-    <script>
-        // Sample data for comments
-        let comments = [
-            "This is an interesting item! - User1",
-            "I love this collection! - User2",
-            "Great details provided. Thanks for sharing. - User3"
-        ];
-        let likeCount = 0;
-        let hasLiked = false;
-
-        // Function to render comments
-        function renderComments() {
-            const commentsList = $('#comments-list');
-            commentsList.empty();
-            comments.forEach(comment => {
-                commentsList.append(`<li class="list-group-item">${comment}</li>`);
-            });
-        }
-
-        // Function to handle adding a comment
-        $('#add-comment-button').click(function () {
-            const commentInput = $('#comment-input');
-            const commentText = commentInput.val().trim();
-            if (commentText) {
-                comments.push(commentText);
-                commentInput.val('');
-                renderComments();
-            }
-        });
-
-        // // Function to handle like button
-        // $('#like-button').click(function () {
-        //     if (!hasLiked) {
-        //         likeCount++;
-        //         $('#like-count').text(likeCount);
-        //         hasLiked = true;
-        //         $(this).removeClass('btn-outline-primary').addClass('btn-primary').prop('disabled', true);
-        //     }
-        // });
-
-        // Initial render
-        renderComments();
-    </script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -274,6 +236,80 @@
                 });
             });
         });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            // Connect to SignalR hub
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/commentHub")
+                .build();
+
+            connection.on("ReceiveComment", function (user, message) {
+                addCommentToList(user, message);
+            });
+
+            connection.start().then(function () {
+                console.log("Connected to SignalR hub");
+            }).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            // Load existing comments
+            loadComments();
+
+            // Handle send comment
+            $("#sendComment").click(function () {
+                const userName = '@Model.CommenterName';
+                const message = $("#commentMessage").val();
+
+                 
+                    $.ajax({
+                        url: '/Comments/AddComment',
+                        type: 'POST',
+                        data: {
+                            itemid: '@Model.item.ItemId',
+                            userName: userName,
+                            message: message
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                connection.invoke("SendComment", userName, message);
+                                // Optionally, clear the input field after sending the comment
+                                 $("#commentMessage").val('');
+           
+                            } else {
+                                // Handle failure case (optional)
+                                alert('Failed to add comment: ' + response.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            // Handle server error or failure
+                            console.error('Error:', status, error);
+                            alert('An error occurred while sending the comment.');
+                        }
+                    });
+                
+            });
+
+            function loadComments(itemid) {
+                $.get('/Comments/GetComments', { itemid: '@Model.item.ItemId' }, function (comments) {
+                    comments.forEach(comment => {
+                        addCommentToList(comment.userName, comment.message);
+                    });
+                });
+            }
+
+
+            function addCommentToList(user, message) {
+                const commentHtml = `<div class="list-group-item">
+                                        <strong>${user}</strong>
+                                        <p>${message}</p>
+                                     </div>`;
+                $("#commentsList").append(commentHtml);
+            }
+        });
+
     </script>
 
 

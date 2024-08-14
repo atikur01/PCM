@@ -106,13 +106,51 @@ namespace PCM.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    CommentID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.CommentID);
+                    table.ForeignKey(
+                        name: "FK_Comments_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ItemLikeCounts",
+                columns: table => new
+                {
+                    ItemLikeCountId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LikeCount = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ItemLikeCounts", x => x.ItemLikeCountId);
+                    table.ForeignKey(
+                        name: "FK_ItemLikeCounts_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Likes",
                 columns: table => new
                 {
                     LikeID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ItemLikeCount = table.Column<int>(type: "int", nullable: true)
+                    VisitorUserID = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -149,6 +187,16 @@ namespace PCM.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Comments_ItemId",
+                table: "Comments",
+                column: "ItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemLikeCounts_ItemId",
+                table: "ItemLikeCounts",
+                column: "ItemId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Items_CollectionId",
                 table: "Items",
                 column: "CollectionId");
@@ -167,6 +215,12 @@ namespace PCM.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Comments");
+
+            migrationBuilder.DropTable(
+                name: "ItemLikeCounts");
+
             migrationBuilder.DropTable(
                 name: "Likes");
 

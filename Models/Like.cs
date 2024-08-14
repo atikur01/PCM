@@ -9,9 +9,7 @@ namespace PCM.Models
         public Guid LikeID { get; set; }
         public Guid? ItemId { get; set; }
         public Guid? VisitorUserID { get; set; }    
-
-        [NotMapped]
-        public virtual Item Item { get; set; }
+        public Item Item { get; set; }
 
     }
 }

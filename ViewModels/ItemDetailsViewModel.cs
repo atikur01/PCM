@@ -14,5 +14,7 @@ namespace PCM.ViewModels
 
         public List<string>? Tags { get; set; }  
 
+        public string? CommenterName { get; set; }   
+
     }
 }
