@@ -31,7 +31,7 @@
                                 <a href="/Item/Details?id=@item.ItemId" class="text-decoration-none">@item.Name</a>
                             </h5>
                             <p class="card-text">
-                                Collection: <a href="#" class="text-decoration-none">@item.CollectionName</a>
+                                Collection: <a href="/Home/CollectionDetails/@item.CollectionId" class="text-decoration-none">@item.CollectionName</a>
                             </p>
                             <p class="card-text">Author: @item.Author</p>
                         </div>
@@ -67,7 +67,7 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <a href="collection_page_1.html" class="text-decoration-none">@collection.Name</a>
+                                <a href="/Home/CollectionDetails/@collection.CollectionId" class="text-decoration-none">@collection.Name</a>
                             </h5>
                             <p class="card-text">Number of items: @collection.TotalItems</p>
                         </div>

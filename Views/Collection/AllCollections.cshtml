@@ -6,9 +6,8 @@
 }
 
 
-<h2>User's Collections</h2>
+<h2>All Collections</h2>
 
-<a href="@Url.Action("Create")" class="btn btn-primary">Create New Collection</a>
 <br />
 <br />
 <table class="table table-bordered" id="collectionsTable">
@@ -17,7 +16,8 @@
             <th>Collection Id</th>
             <th>Name</th>
             <th>Category</th>
-        @*     <th>Description</th> *@
+            <th>Created At</th>
+            @*     <th>Description</th> *@
             <th>Actions</th>
         </tr>
     </thead>
@@ -25,14 +25,15 @@
         @foreach (var collection in Model)
         {
             <tr>
-                <td>@collection.CollectionId</td>   
+                <td>@collection.CollectionId</td>
                 <td>@collection.Name</td>
                 <td>@collection.CategoryName</td>
-               @*  <td>@collection.Description</td> *@
+                <td>@collection.CreatedAt</td>  
+
+                @*  <td>@collection.Description</td> *@
                 <td>
-                    <a href="@Url.Action("Details", new { id = collection.CollectionId })" class="btn btn-info">Details</a>
-                    <a href="@Url.Action("Edit", new { id = collection.CollectionId })" class="btn btn-warning">Edit</a>
-                    <a href="@Url.Action("Delete", new { id = collection.CollectionId })" class="btn btn-danger">Delete</a>
+                    <a href="@Url.Action("DetailsView", new { id = collection.CollectionId })" class="btn btn-info">Details</a>
+                    
                 </td>
             </tr>
         }
@@ -46,8 +47,9 @@
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#collectionsTable').DataTable(
-            );
+            $('#collectionsTable').DataTable({
+                "order": [[3, "desc"]]
+            });
         });
     </script>
 }   

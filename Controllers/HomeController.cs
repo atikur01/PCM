@@ -62,6 +62,19 @@ namespace PCM.Controllers
             return View(viewModel);
         }
 
+        public async  Task<IActionResult> CollectionDetails(Guid id)
+        {
+            var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+            if (collection == null)
+            {
+                return NotFound();
+            }
+            return View(collection);
+
+
+        }
+
+
         public IActionResult Privacy()
         {
             return View();

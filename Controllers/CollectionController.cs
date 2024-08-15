@@ -175,6 +175,21 @@ namespace PCM.Controllers
 
         }
 
+        public async Task<IActionResult> AllCollections()
+        {
+            var collection = await _context.Collections.ToListAsync();
+            return View(collection);
+        }
+
+        public async Task<IActionResult> DetailsView(Guid id)
+        {
+            var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+            if (collection == null)
+            {
+                return NotFound();
+            }
+            return View(collection);
+        }   
 
     }
 }

@@ -30,9 +30,16 @@
                 <li class="nav-item" id="loginLink">
                     <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
                 </li>
+
                 <li class="nav-item" id="registerLink">
                     <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
                 </li>
+
+                <li class="nav-item" id="registerLink">
+                    <a class="nav-link" asp-area="" asp-controller="Collection" asp-action="AllCollections">All-Collections</a>
+                </li>
+
+
             </ul>
             <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Search" asp-action="Index" method="GET">
                 <input class="form-control mr-sm-2" type="search" name="query" placeholder="Search items..." aria-label="Search" required>
