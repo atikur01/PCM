@@ -1,4 +1,9 @@
-﻿@model PCM.Models.Collection
+﻿
+@{
+    ViewData["Title"] = "CollectionDetails";
+}
+
+@model PCM.Models.Collection
 
 @section Styles {
     <!-- DataTables CSS -->
@@ -57,7 +62,7 @@
 <div style="display: flex;">
     <h3 style="margin-right:2%">Items</h3>
     @* <a href="@Url.Action("Create", "Item", new { collectionId = Model.CollectionId })" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add Item
+    <i class="fas fa-plus"></i> Add Item
     </a> *@
 
 </div>
@@ -111,7 +116,7 @@
                 <td>
 
                     <a href="/Item/Details?id=@item.ItemId" class="btn btn-warning">View Item</a>
-                    
+
                 </td>
             </tr>
         }
@@ -131,3 +136,5 @@
         });
     </script>
 }
+
+

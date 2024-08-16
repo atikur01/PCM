@@ -309,5 +309,26 @@ namespace PCM.Controllers
             return Json(new { success = false, message = "You have already liked this item." });
         }
 
+        public async Task<IActionResult>  SearchByTagName(string tagName)
+        {
+            var itemIds = await _context.Tags
+                .Where(e => e.Name == tagName)
+                .ToListAsync();
+            var items = new List<Item>();
+
+            itemIds.ForEach(e =>
+            {
+                var item = _context.Items.FirstOrDefault(i => i.ItemId == e.ItemId);
+                if (item != null)
+                {
+                    items.Add(item);
+                }
+            });
+
+
+
+            return View(items);
+        }
+
     }
 }

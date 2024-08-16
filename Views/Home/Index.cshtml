@@ -31,7 +31,7 @@
                                 <a href="/Item/Details?id=@item.ItemId" class="text-decoration-none">@item.Name</a>
                             </h5>
                             <p class="card-text">
-                                Collection: <a href="/Home/CollectionDetails/@item.CollectionId" class="text-decoration-none">@item.CollectionName</a>
+                                Collection: <a href="/Collection/CollectionDetails/@item.CollectionId" class="text-decoration-none">@item.CollectionName</a>
                             </p>
                             <p class="card-text">Author: @item.Author</p>
                         </div>
@@ -67,7 +67,7 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <a href="/Home/CollectionDetails/@collection.CollectionId" class="text-decoration-none">@collection.Name</a>
+                                <a href="/Collection/CollectionDetails/@collection.CollectionId" class="text-decoration-none">@collection.Name</a>
                             </h5>
                             <p class="card-text">Number of items: @collection.TotalItems</p>
                         </div>
@@ -112,7 +112,7 @@
                         // Get the color for the current tag, default to "primary" if not found
                         var color = tagColors[tag.Key];
 
-                        <a href="/tags/@tag" class="badge bg-@color m-1 text-decoration-none text-white" style="font-size: 1.2em;">
+                        <a href="/item/SearchByTagName?tagName=@tag.Value.ToString()" class="badge bg-@color m-1 text-decoration-none text-white" style="font-size: 1.2em;">
                             @tag.Value
                         </a>
 

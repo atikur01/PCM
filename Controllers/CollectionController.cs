@@ -189,7 +189,20 @@ namespace PCM.Controllers
                 return NotFound();
             }
             return View(collection);
-        }   
+        }
+
+
+        public async Task<IActionResult> CollectionDetails(Guid id)
+        {
+            var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+            if (collection == null)
+            {
+                return NotFound();
+            }
+            return View(collection);
+
+
+        }
 
     }
 }
