@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Nest;
+using PCM.AutomapperMappingProfile;
 using PCM.Data;
+using PCM.ElasticSearchModels;
 using PCM.Models;
+using PCM.Services;
 
 namespace PCM.Controllers
 {
@@ -11,9 +16,12 @@ namespace PCM.Controllers
 
         private readonly AppDbContext _context;
 
-        public CommentsController( AppDbContext appContext)
+        private readonly ElasticsearchService _elasticsearchService;
+
+        public CommentsController( AppDbContext appContext, ElasticsearchService elasticsearchService)
         {
             _context = appContext;
+            _elasticsearchService = elasticsearchService;
         }
 
         [HttpPost]
@@ -31,6 +39,13 @@ namespace PCM.Controllers
 
             _context.Comments.Add(comment);
             _context.SaveChangesAsync();
+
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+            var mapper = config.CreateMapper();
+            EsComment target = mapper.Map<EsComment>(comment);
+            await _elasticsearchService.CreateIndexIfNotExists("comment-index");
+            var result = await _elasticsearchService.AddOrUpdate(target, target.CommentID);
+
 
             return Ok(new { success = true, message = "Comment added successfully" });
         }

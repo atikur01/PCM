@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
+﻿using CloudinaryDotNet;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PCM.Data;
@@ -9,7 +9,21 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Threading.Tasks;
+using PCM.Services;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
+using Elasticsearch.Net;
+using Elastic.Clients.Elasticsearch.Nodes;
+using Nest;
+using AutoMapper;
+using PCM.AutomapperMappingProfile;
+using PCM.ElasticSearchModels;
+
+
+
 
 namespace PCM.Controllers
 {
@@ -17,10 +31,13 @@ namespace PCM.Controllers
     {
         private readonly AppDbContext _context;
 
+        private readonly ElasticsearchService _elasticsearchService;
 
-        public ItemController(AppDbContext context)
+        public ItemController(AppDbContext context, ElasticsearchService elasticsearchService) 
         {
             _context = context;
+            _elasticsearchService = elasticsearchService;
+
         }
 
         public async Task<IActionResult> Create(Guid collectionId)
@@ -40,6 +57,9 @@ namespace PCM.Controllers
                 Collection = collection
             };
 
+
+            
+   
             return View(newItem);
         }
 
@@ -73,6 +93,15 @@ namespace PCM.Controllers
             item.Author = user.Name;
 
             _context.Items.Add(item);
+
+
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+            var mapper = config.CreateMapper();
+            EsItem target = mapper.Map<EsItem>(item);
+            await _elasticsearchService.CreateIndexIfNotExists("item-index");
+            var result = await _elasticsearchService.AddOrUpdate(target , target.ItemId);
+
+
 
             // Process and add tags, skipping the first tag in the list
             ProcessTags(item);
@@ -123,6 +152,13 @@ namespace PCM.Controllers
             ProcessTags(item);
 
             _context.Items.Update(item);
+
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+            var mapper = config.CreateMapper();
+            EsItem target = mapper.Map<EsItem>(item);
+            await _elasticsearchService.CreateIndexIfNotExists("item-index");
+            var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
@@ -138,10 +174,23 @@ namespace PCM.Controllers
 
             _context.Items.Remove(item);
 
+            await _elasticsearchService.CreateIndexIfNotExists("item-index");
+            await _elasticsearchService.Remove<dynamic>(id.ToString());
+
+            
+
+
             var tags = await _context.Tags.Where(t => t.ItemId == id).ToListAsync();
+
+
             _context.Tags.RemoveRange(tags);
 
             await _context.SaveChangesAsync();
+
+            await _elasticsearchService.CreateIndexIfNotExists("comment-index");
+            await _elasticsearchService.RemoveByTextMatch<Item>("item_id", id.ToString() );
+
+
             return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
         }
 
@@ -152,12 +201,15 @@ namespace PCM.Controllers
                 var tags = JsonConvert.DeserializeObject<List<string>>(str);
                 foreach (var tag in tags)
                 {
-                    _context.Tags.Add(new Tag
+                    Tag tagobj = new Tag
                     {
                         TagId = Guid.NewGuid(),
                         ItemId = item.ItemId,
                         Name = tag
-                    });
+                    };
+                    _context.Tags.Add(tagobj);
+
+
                 }
             }
         }
@@ -192,11 +244,11 @@ namespace PCM.Controllers
             var like = await _context.Likes
                 .FirstOrDefaultAsync(l => l.ItemId == id);
 
-            Like likeobj = null;
+            Models.Like likeobj = null;
 
             if (like == null)
             {
-                likeobj = new Like
+                likeobj = new Models.Like
                 {
 
                     ItemId = id
@@ -267,7 +319,7 @@ namespace PCM.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Like(Like like)
+        public async Task<IActionResult> Like(Models.Like like)
         {
             like.LikeID = Guid.NewGuid();
             var itemid = Guid.Parse(like.ItemId.ToString());

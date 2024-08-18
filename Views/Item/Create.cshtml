@@ -35,21 +35,21 @@
     {
         <div class="form-group">
             <label for="CustomString1Name">@Model.Collection.CustomString1Name</label>
-            <input type="text" asp-for="CustomString1Value" class="form-control" />
+            <input type="text" asp-for="CustomString1Value" class="form-control" required />
         </div>
     }
     @if (Model.Collection.CustomString2Name != null)
     {
         <div class="form-group">
             <label for="CustomString2Name">@Model.Collection.CustomString2Name</label>
-            <input type="text" asp-for="CustomString2Value" class="form-control" />
+            <input type="text" asp-for="CustomString2Value" class="form-control" required />
         </div>
     }
     @if (Model.Collection.CustomString3Name != null)
     {
         <div class="form-group">
             <label for="CustomString3Name ">@Model.Collection.CustomString3Name </label>
-            <input type="text" asp-for="CustomString3Value" class="form-control" />
+            <input type="text" asp-for="CustomString3Value" class="form-control" required />
         </div>
     }
 
@@ -58,21 +58,21 @@
     {
         <div class="form-group">
             <label for="CustomInt1Name ">@Model.Collection.CustomInt1Name </label>
-            <input type="number" asp-for="CustomInt1Value" class="form-control" />
+            <input type="number" asp-for="CustomInt1Value" class="form-control" required />
         </div>
     }
     @if (Model.Collection.CustomInt2Name != null)
     {
         <div class="form-group">
             <label for="CustomInt2Name ">@Model.Collection.CustomInt2Name</label>
-            <input type="number" asp-for="CustomInt2Value" class="form-control" />
+            <input type="number" asp-for="CustomInt2Value" class="form-control" required />
         </div>
     }
     @if (Model.Collection.CustomInt3Name != null)
     {
         <div class="form-group">
             <label for="CustomInt3Name">@Model.Collection.CustomInt3Name</label>
-            <input type="number" asp-for="CustomInt3Value" class="form-control" />
+            <input type="number" asp-for="CustomInt3Value" class="form-control" required />
         </div>
     }
 
@@ -81,7 +81,7 @@
     {
         <div class="form-group">
             <label for="CustomMultilineText1Name ">@Model.Collection.CustomMultilineText1Name </label>
-            <textarea asp-for="CustomMultilineText1Value" class="form-control"> </textarea>
+            <textarea asp-for="CustomMultilineText1Value" class="form-control" required> </textarea>
 
         </div>
     }
@@ -89,14 +89,14 @@
     {
         <div class="form-group">
             <label for="CustomMultilineText2Name ">@Model.Collection.CustomMultilineText2Name</label>
-            <textarea asp-for="CustomMultilineText2Value" class="form-control"> </textarea>
+            <textarea asp-for="CustomMultilineText2Value" class="form-control" required> </textarea>
         </div>
     }
     @if (Model.Collection.CustomMultilineText3Name != null)
     {
         <div class="form-group">
             <label for="CustomMultilineText3Name">@Model.Collection.CustomMultilineText3Name</label>
-            <textarea asp-for="CustomMultilineText3Value" class="form-control"> </textarea>
+            <textarea asp-for="CustomMultilineText3Value" class="form-control" required> </textarea>
         </div>
     }
 
@@ -104,7 +104,7 @@
     @if (Model.Collection.CustomBoolean1Name != null)
     {
         <div class="form-check">
-            <input asp-for="@Model.CustomBoolean1Value" class="form-check-input" type="checkbox" id="flexCheckDefault">
+            <input asp-for="@Model.CustomBoolean1Value" class="form-check-input" type="checkbox" id="flexCheckDefault" >
             <label class="form-check-label" for="flexCheckDefault">
                 @Model.Collection.CustomBoolean1Name
             </label>
@@ -135,21 +135,21 @@
     {
         <div class="form-group">
             <label for="CustomDate1Name ">@Model.Collection.CustomDate1Name</label>
-            <input type="date" asp-for="CustomDate1Value" class="form-control" />
+            <input type="date" asp-for="CustomDate1Value" class="form-control" required />
         </div>
     }
     @if (Model.Collection.CustomDate2Name != null)
     {
         <div class="form-group">
             <label for="CustomDate2Name">@Model.Collection.CustomDate2Name</label>
-            <input type="date" asp-for="CustomDate2Value" class="form-control" />
+            <input type="date" asp-for="CustomDate2Value" class="form-control" required />
         </div>
     }
     @if (Model.Collection.CustomDate3Name != null)
     {
         <div class="form-group">
             <label for="CustomDate3Name ">@Model.Collection.CustomDate3Name</label>
-            <input type="date" asp-for="CustomDate3Value" class="form-control" />
+            <input type="date" asp-for="CustomDate3Value" class="form-control" required />
         </div>
     }
 

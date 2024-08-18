@@ -1,11 +1,14 @@
-using Microsoft.Azure.Cosmos;
+
+using Elasticsearch.Net;
 using Microsoft.EntityFrameworkCore;
+using Nest;
 using PCM.ActionFilter;
 using PCM.Data;
 using PCM.Hubs;
 using PCM.Models;
 using PCM.Services;
 using Serilog;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace PCM
 {
@@ -13,7 +16,25 @@ namespace PCM
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            try
+            {
+                var builder = WebApplication.CreateBuilder(args);
+
+            var settings = new ConnectionSettings(new Uri("https://24.144.112.56:9200"))
+                .ServerCertificateValidationCallback(CertificateValidations.AllowAll)
+                .BasicAuthentication("elastic", "2yUqvTzesI9M=vqcegwx")
+                .EnableApiVersioningHeader();
+
+            var client = new ElasticClient(settings);
+            builder.Services.AddSingleton<IElasticClient>(client);
+
+            builder.Services.AddScoped<ElasticsearchService>(sp =>
+            {
+                var elasticClient = sp.GetRequiredService<IElasticClient>();
+                return new ElasticsearchService(elasticClient, "default-Index");
+            });
+
+
 
             // Configure Serilog
             Log.Logger = new LoggerConfiguration()
@@ -60,6 +81,8 @@ namespace PCM
             // Register CloudinaryUploader as a singleton
             builder.Services.AddSingleton<CloudinaryUploader>();
 
+            
+
             // Add distributed memory cache and session services
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
@@ -69,8 +92,7 @@ namespace PCM
                 options.Cookie.IsEssential = true;
             });
 
-            try
-            {
+            
                 var app = builder.Build();
 
                 Log.Information("Application starting up...");

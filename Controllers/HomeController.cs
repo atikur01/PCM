@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PCM.Data;
 using PCM.Models;
+using PCM.Services;
 using PCM.ViewModels;
 using System.Diagnostics;
 
@@ -11,16 +12,23 @@ namespace PCM.Controllers
     {
         private readonly ILogger<HomeController> _logger;
 
-        private readonly AppDbContext _context; 
+        private readonly AppDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger , AppDbContext appContext )
+        private readonly ElasticsearchService _elasticsearchService;
+
+        public HomeController(ILogger<HomeController> logger , AppDbContext appContext, ElasticsearchService elasticsearchService)
         {
             _logger = logger;
-            _context = appContext;  
+            _context = appContext;
+            _elasticsearchService = elasticsearchService;
         }
 
         public async Task<IActionResult>  Index()
         {
+            
+
+
+
             var items = await _context.Items
                   .OrderByDescending(item => item.CreatedAt)
                   .Take(6)
