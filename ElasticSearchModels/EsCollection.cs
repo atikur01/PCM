@@ -13,7 +13,7 @@ namespace PCM.ElasticSearchModels
         [Keyword(Name = "user_id")]
         public Guid UserId { get; set; }
 
-        [Object(Name = "user")]
+        [Ignore]
         public User? User { get; set; }
 
         [Text(Name = "name")]

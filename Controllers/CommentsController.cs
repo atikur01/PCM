@@ -18,34 +18,50 @@ namespace PCM.Controllers
 
         private readonly ElasticsearchService _elasticsearchService;
 
-        public CommentsController( AppDbContext appContext, ElasticsearchService elasticsearchService)
+        private  UserService _userService;
+
+        public CommentsController( AppDbContext appContext, ElasticsearchService elasticsearchService, UserService userService)
         {
             _context = appContext;
             _elasticsearchService = elasticsearchService;
+            _userService = userService;
         }
 
         [HttpPost]
-        public async Task<IActionResult>  AddComment(string itemid, string userName, string message)
+        public async Task<IActionResult>  AddComment(string itemid, string userName, string message, Guid visitorID)
         {
-            var comment = new Comment
+            if (string.IsNullOrEmpty(itemid) || string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(message))
             {
-                CommentID = Guid.NewGuid(),
-                ItemId = Guid.Parse(itemid),    
-                UserName = userName,
-                Message = message,
-                CreatedAt = DateTime.Now
-            };
+                return BadRequest("Invalid input.");
+            }
 
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+            if( await IsValidUserAsync(visitorID))
+            {
+                var comment = new Comment
+                {
+                    CommentID = Guid.NewGuid(),
+                    ItemId = Guid.Parse(itemid),
+                    UserName = userName,
+                    Message = message,
+                    CreatedAt = DateTime.Now
+                };
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-            var mapper = config.CreateMapper();
-            EsComment target = mapper.Map<EsComment>(comment);
-            await _elasticsearchService.CreateIndexIfNotExists("comment-index");
-            var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+                _context.Comments.Add(comment);
+                await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Comment added successfully" });
+                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                var mapper = config.CreateMapper();
+                EsComment target = mapper.Map<EsComment>(comment);
+                await _elasticsearchService.CreateIndexIfNotExists("comment-index");
+                var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+
+                return Ok(new { success = true, message = "Comment added successfully" });
+
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
         }
 
         [HttpGet]
@@ -64,5 +80,31 @@ namespace PCM.Controllers
 
             return Json(comments);
         }
+
+
+
+        public async Task<bool> IsValidUserAsync(Guid userid)
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+
+            var isUserExist = await _userService.GetUserByIdAsync(userid);
+
+            if (sessionUserIdGuid == userid && isUserExist != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
     }
 }

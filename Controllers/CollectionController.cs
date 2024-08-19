@@ -54,7 +54,7 @@ namespace PCM.Controllers
         public async Task<IActionResult> IndexByUserID(Guid userid)
         {
  
-            if (await IsAdmin() || IsValidUser(userid) )
+            if (await IsAdmin() || await IsValidUserAsync(userid) )
             {
                 ViewBag.UserId = userid;
 
@@ -76,7 +76,7 @@ namespace PCM.Controllers
         public async Task<IActionResult> CreateByUserIDAsync(Guid userid)
         {
 
-            if (await IsAdmin() || IsValidUser(userid))
+            if (await IsAdmin() || await IsValidUserAsync(userid))
             {
                 ViewBag.UserId = userid;
                 return View();
@@ -88,26 +88,10 @@ namespace PCM.Controllers
 
         }
 
-        public async Task<bool> IsAdmin()
-        {
-            var sessionUserIdString = HttpContext.Session.GetString("Id");
-
-            if (string.IsNullOrEmpty(sessionUserIdString))
-            {
-                return false;
-            }
-
-            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
-
-            return await _userService.IsAdminAsync(sessionUserIdGuid);
-        }
-
-
         [HttpPost]
         public async Task<IActionResult> Create(Collection collection, IFormFile Image)
         {
-
-            if( await IsAdmin() || IsValidUser(collection.UserId)  )
+            if( await IsAdmin() || await IsValidUserAsync(collection.UserId))
             {
                 string? ImageUrl = await Upload(Image);
 
@@ -151,7 +135,7 @@ namespace PCM.Controllers
                 return NotFound();
             }
 
-            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId) )
             {
                 return View(collection);
             }
@@ -165,9 +149,11 @@ namespace PCM.Controllers
 
         public async Task<string?> Upload(IFormFile file)
         {
+            var imageNotSetUrl = "https://res.cloudinary.com/dafywr2nr/image/upload/v1723141221/vezrv9aufcei3w7jjxgu.png";
+
             if (file == null || file.Length == 0)
             {
-                return "File is empty.";
+                return imageNotSetUrl;
             }
 
             string publicUrl = await _cloudinaryUploader.UploadFileAsync(file);
@@ -189,7 +175,7 @@ namespace PCM.Controllers
                 return NotFound();
             }
 
-            if (await IsAdmin() || IsValidUser(collection.UserId)  )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId)  )
             {
                 if(collection.ImageUrl != null)
                 {
@@ -232,7 +218,7 @@ namespace PCM.Controllers
            
             if(collection == null) return NotFound();
 
-            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId) )
             {
                 return View(collection);
             }
@@ -249,7 +235,7 @@ namespace PCM.Controllers
         {
             if (collection == null) return NotFound();
 
-            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId) )
             {
                 try
                 {
@@ -300,18 +286,33 @@ namespace PCM.Controllers
             return View(collection);
         }
 
-      
-        public bool IsValidUser(Guid userid)
+        public async Task<bool> IsAdmin()
         {
             var sessionUserIdString = HttpContext.Session.GetString("Id");
 
             if (string.IsNullOrEmpty(sessionUserIdString))
             {
-               return false;
+                return false;
+            }
+
+            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+
+            return await _userService.IsAdminAsync(sessionUserIdGuid);
+        }
+
+        public async Task<bool> IsValidUserAsync(Guid userid)
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
             }
             var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
 
-            if (sessionUserIdGuid == userid)
+            var isUserExist = await _userService.GetUserByIdAsync(userid);
+
+            if (sessionUserIdGuid == userid && isUserExist != null)
             {
                 return true;
             }
@@ -321,6 +322,9 @@ namespace PCM.Controllers
             }
 
         }
+
+
+
 
     }
 }

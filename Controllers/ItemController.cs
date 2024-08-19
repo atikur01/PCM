@@ -27,7 +27,6 @@ namespace PCM.Controllers
     public class ItemController : Controller
     {
         private readonly AppDbContext _context;
-
         private readonly ElasticsearchService _elasticsearchService;
         private readonly UserService _userService;
 
@@ -37,38 +36,6 @@ namespace PCM.Controllers
             _elasticsearchService = elasticsearchService;
             _userService = userService;
 
-        }
-
-        public async Task<bool> IsAdmin()
-        {
-            var sessionUserIdString = HttpContext.Session.GetString("Id");
-            if (string.IsNullOrEmpty(sessionUserIdString))
-            {
-                return false;
-            }
-
-            var id = Guid.Parse(sessionUserIdString);
-            return await _userService.IsAdminAsync(id);
-        }
-
-        public bool IsValidUser(Guid userid)
-        {
-            var sessionUserIdString = HttpContext.Session.GetString("Id");
-
-            if (string.IsNullOrEmpty(sessionUserIdString))
-            {
-                return false;
-            }
-            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
-
-            if (sessionUserIdGuid == userid)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
 
         public async Task<IActionResult> Create(Guid collectionId)
@@ -82,7 +49,7 @@ namespace PCM.Controllers
                 return NotFound("Collection not found.");
             }
 
-            if (await IsAdmin() || IsValidUser(collection.UserId)  )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId)  )
             {
                 var newItem = new Item
                 {
@@ -115,13 +82,13 @@ namespace PCM.Controllers
                 return NotFound("Collection not found.");
             }
 
-            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId) )
             {
                 item.CollectionName = collection.Name;
                 collection.TotalItems++;
                 _context.Collections.Update(collection);
 
-                var user = await _context.Users.FindAsync(collection.UserId);
+                var user = await _userService.GetUserByIdAsync(collection.UserId);
                 if (user == null)
                 {
                     return NotFound("User not found.");
@@ -177,7 +144,7 @@ namespace PCM.Controllers
                 return NotFound("Collection not found.");
             }   
 
-            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(collection.UserId) )
             {
                 ViewBag.Collection = collection;
 
@@ -212,7 +179,7 @@ namespace PCM.Controllers
             _context.Tags.RemoveRange(_context.Tags.Where(t => t.ItemId == item.ItemId));
             ProcessTags(item);
 
-            if (await IsAdmin() || IsValidUser(item.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(item.UserId) )
             {
                 _context.Items.Update(item);
 
@@ -235,13 +202,25 @@ namespace PCM.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var item = await _context.Items.FindAsync(id);
+            
             if (item == null)
             {
                 return NotFound("Item not found.");
             }
 
-            if (await IsAdmin() ||  IsValidUser(item.UserId) )
+            if (await IsAdmin() || await IsValidUserAsync(item.UserId) )
             {
+                var collection = await _context.Collections.FindAsync(item.CollectionId);
+
+                if (collection == null)
+                {
+                    return NotFound("Collection not found.");
+                }
+                else
+                {
+                    collection.TotalItems--;
+                }
+
                 _context.Items.Remove(item);
 
                 _elasticsearchService.Index("item-index");
@@ -300,11 +279,6 @@ namespace PCM.Controllers
                 .Distinct()
                 .ToListAsync();
 
-            if (tags == null)
-            {
-                return NotFound("Tags not found.");
-            }
-
             var like = await _context.Likes
                 .FirstOrDefaultAsync(l => l.ItemId == id);
 
@@ -361,6 +335,7 @@ namespace PCM.Controllers
             {
                 item = item,
                 collection = item.Collection,
+                visitorID = VisitorUserId,
                 AuthorName = item.Collection.User.Name,
                 Tags = tags,
                 Like = likeobj,
@@ -370,7 +345,7 @@ namespace PCM.Controllers
                     ItemId = item.ItemId,
                     LikeCount = await _context.ItemLikeCounts
                     .Where(ilc => ilc.ItemId == id)
-                    .Select(ilc => ilc.LikeCount) // Assuming "Count" is the column holding the number of likes
+                    .Select(ilc => ilc.LikeCount)
                     .FirstOrDefaultAsync()
                 }
             };
@@ -386,7 +361,7 @@ namespace PCM.Controllers
                 return BadRequest("Invalid like data.");
             }
 
-            if (IsValidUser( Guid.Parse(like.VisitorUserID.ToString() )  ))
+            if (await IsValidUserAsync( Guid.Parse(like.VisitorUserID.ToString() )  ))
             {
                 like.LikeID = Guid.NewGuid();
                 var itemid = Guid.Parse(like.ItemId.ToString());
@@ -396,8 +371,7 @@ namespace PCM.Controllers
 
                 if (existingLike == null)
                 {
-                    // Initialize the like count to zero for the new like
-
+ 
                     _context.Likes.Add(like);
 
 
@@ -412,11 +386,12 @@ namespace PCM.Controllers
                     }
                     else
                     {
-                        _context.ItemLikeCounts.First(l => l.ItemId == like.ItemId).LikeCount++;
+                        var itemLikeCount = await _context.ItemLikeCounts.FirstAsync(l => l.ItemId == like.ItemId);
+                        itemLikeCount.LikeCount++;
                     }
 
                     await _context.SaveChangesAsync();
-                    // Return the updated like count
+
                     var likeCount = await _context.ItemLikeCounts
                         .Where(ilc => ilc.ItemId == itemid)
                         .Select(ilc => ilc.LikeCount) 
@@ -459,6 +434,44 @@ namespace PCM.Controllers
 
             return View(items);
         }
+
+
+        public async Task<bool> IsAdmin()
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+
+            var id = Guid.Parse(sessionUserIdString);
+            return await _userService.IsAdminAsync(id);
+        }
+
+        public async Task<bool> IsValidUserAsync(Guid userid)
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+
+            var isUserExist = await _userService.GetUserByIdAsync(userid);
+
+            if (sessionUserIdGuid == userid && isUserExist != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+
 
     }
 }

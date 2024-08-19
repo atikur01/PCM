@@ -12,12 +12,22 @@ namespace PCM.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Comments_Items_ItemId",
-                table: "Comments");
+                name: "FK_Likes_Items_ItemId",
+                table: "Likes");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "VisitorUserID",
+                table: "Likes",
+                type: "uniqueidentifier",
+                nullable: false,
+                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
+                oldClrType: typeof(Guid),
+                oldType: "uniqueidentifier",
+                oldNullable: true);
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ItemId",
-                table: "Comments",
+                table: "Likes",
                 type: "uniqueidentifier",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
@@ -26,8 +36,8 @@ namespace PCM.Migrations
                 oldNullable: true);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Comments_Items_ItemId",
-                table: "Comments",
+                name: "FK_Likes_Items_ItemId",
+                table: "Likes",
                 column: "ItemId",
                 principalTable: "Items",
                 principalColumn: "ItemId",
@@ -38,20 +48,28 @@ namespace PCM.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Comments_Items_ItemId",
-                table: "Comments");
+                name: "FK_Likes_Items_ItemId",
+                table: "Likes");
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "VisitorUserID",
+                table: "Likes",
+                type: "uniqueidentifier",
+                nullable: true,
+                oldClrType: typeof(Guid),
+                oldType: "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ItemId",
-                table: "Comments",
+                table: "Likes",
                 type: "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Comments_Items_ItemId",
-                table: "Comments",
+                name: "FK_Likes_Items_ItemId",
+                table: "Likes",
                 column: "ItemId",
                 principalTable: "Items",
                 principalColumn: "ItemId");

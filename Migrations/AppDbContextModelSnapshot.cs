@@ -229,10 +229,10 @@ namespace PCM.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ItemId")
+                    b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("VisitorUserID")
+                    b.Property<Guid>("VisitorUserID")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("LikeID");
@@ -345,7 +345,9 @@ namespace PCM.Migrations
                 {
                     b.HasOne("PCM.Models.Item", "Item")
                         .WithMany()
-                        .HasForeignKey("ItemId");
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Item");
                 });

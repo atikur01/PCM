@@ -1,5 +1,8 @@
 ﻿@model PCM.ViewModels.ItemDetailsViewModel
 
+@{
+    ViewData["Title"] = "Item Details";
+}
 
 
 <div class="container mt-5">
@@ -270,7 +273,10 @@
                         data: {
                             itemid: '@Model.item.ItemId',
                             userName: userName,
-                            message: message
+                            message: message,
+                           visitorID : '@Model.visitorID'
+
+
                         },
                         success: function (response) {
                             if (response.success) {

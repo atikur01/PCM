@@ -166,5 +166,10 @@ namespace PCM.Services
 
             return user.Role == UserRole.Admin && !user.IsBlocked;
         }
+
+        
+
+
+
     }
 }

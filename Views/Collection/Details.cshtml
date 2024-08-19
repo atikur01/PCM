@@ -1,5 +1,9 @@
 ﻿@model PCM.Models.Collection
 
+@{
+    ViewData["Title"] = "Collection Details";
+}
+
 @section Styles {
     <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.1.3/css/dataTables.dataTables.min.css">
@@ -109,7 +113,7 @@
                 
 
                 <td>
-                    <a href="@Url.Action("Details", "Item", new { id = item.ItemId })" class="btn btn-warning">View Item</a>
+                    <a href="@Url.Action("Details", "Item", new { id = item.ItemId })" class="btn btn-info">View Item</a>
                     <a href="@Url.Action("Edit", "Item", new { id = item.ItemId })" class="btn btn-warning">Edit</a>
                     <a href="@Url.Action("Delete", "Item", new { id = item.ItemId })" class="btn btn-danger">Delete</a>
                 </td>

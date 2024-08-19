@@ -74,6 +74,7 @@ namespace PCM.Migrations
                 {
                     ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CollectionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Author = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CollectionName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -110,7 +111,7 @@ namespace PCM.Migrations
                 columns: table => new
                 {
                     CommentID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -122,7 +123,8 @@ namespace PCM.Migrations
                         name: "FK_Comments_Items_ItemId",
                         column: x => x.ItemId,
                         principalTable: "Items",
-                        principalColumn: "ItemId");
+                        principalColumn: "ItemId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

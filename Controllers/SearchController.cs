@@ -49,59 +49,77 @@ namespace PCM.Controllers
 
             _elasticsearchService.Index("item-index");
             var resultsItems = await _elasticsearchService.Query<dynamic>(query);
-            
-            foreach (var result in resultsItems)
-            {
-                // Assuming 'result' is of type Dictionary<string, object>
-                if (result.TryGetValue("item_id", out object itemIdValue))
-                {
-                    var itemId = itemIdValue.ToString();
-                    itemids.Add(itemId);
-                }
-              
-            }
 
+            if (resultsItems != null)
+            {
+                foreach (var result in resultsItems)
+                {
+                    // Assuming 'result' is of type Dictionary<string, object>
+                    if (result.TryGetValue("item_id", out object itemIdValue))
+                    {
+                        var itemId = itemIdValue.ToString();
+                        itemids.Add(itemId);
+                    }
+
+                }
+
+            }
+            
 
             _elasticsearchService.Index("comment-index");
             var resultComments = await _elasticsearchService.Query<dynamic>(query);
 
-            foreach (var result in resultComments)
+
+            if(resultComments != null)
             {
-                if (result.TryGetValue("item_id", out object itemIdValue))
+                foreach (var result in resultComments)
                 {
-                    var itemId = itemIdValue.ToString();
-                    itemids.Add(itemId);
+                    if (result.TryGetValue("item_id", out object itemIdValue))
+                    {
+                        var itemId = itemIdValue.ToString();
+                        itemids.Add(itemId);
+                    }
+
                 }
-
             }
 
-            foreach (var itemid in itemids)
+
+            if(itemids.Count > 0)
             {
-                var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == Guid.Parse(itemid));
-                 if (item != null)  
-                items.Add(item);
-            }
+                foreach (var itemid in itemids)
+                {
+                    var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == Guid.Parse(itemid));
+                    if (item != null)
+                        items.Add(item);
+                }
+            }   
 
-
+   
             _elasticsearchService.Index("collection-index");
             var resultCollection = await _elasticsearchService.Query<dynamic>(query);
 
-            foreach (var result in resultCollection)
+            if (resultCollection != null)
             {
-                if (result.TryGetValue("collection_id", out object collectionIdValue))
+                foreach (var result in resultCollection)
                 {
-                    var collectionId = collectionIdValue.ToString();
-                    collectionids.Add(collectionId);
+                    if (result.TryGetValue("collection_id", out object collectionIdValue))
+                    {
+                        var collectionId = collectionIdValue.ToString();
+                        collectionids.Add(collectionId);
+                    }
+
                 }
-
             }
 
-            foreach (var collectionid in collectionids)
+           
+            if(collectionids.Count > 0)
             {
-                var item = await _context.Collections.FirstOrDefaultAsync(i => i.CollectionId == Guid.Parse(collectionid));
-                collections.Add(item);
+                foreach (var collectionid in collectionids)
+                {
+                    var item = await _context.Collections.FirstOrDefaultAsync(i => i.CollectionId == Guid.Parse(collectionid));
+                    collections.Add(item);
+                }
             }
-
 
             var searchResults = new SearchViewModel
             {

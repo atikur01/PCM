@@ -7,8 +7,8 @@ namespace PCM.Models
     {
         [Key]
         public Guid LikeID { get; set; }
-        public Guid? ItemId { get; set; }
-        public Guid? VisitorUserID { get; set; }    
+        public Guid ItemId { get; set; }
+        public Guid VisitorUserID { get; set; }    
         public Item Item { get; set; }
 
     }
