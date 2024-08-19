@@ -5,7 +5,7 @@ namespace PCM.Services
     public class ElasticsearchService
     {
         private string _indexName { get; set; }
-        private readonly IElasticClient _client;
+        public readonly IElasticClient _client;
 
         public ElasticsearchService(IElasticClient client, string indexName)
         {
@@ -18,6 +18,14 @@ namespace PCM.Services
             _indexName = indexName;
             return this;
         }
+
+
+        public void SetIndex(string indexName)
+        {
+            _indexName = indexName;
+
+        }
+
 
         public async Task CreateIndexIfNotExists(string indexName)
         {
@@ -46,13 +54,6 @@ namespace PCM.Services
             );
             return indexResponse.IsValid;
         }
-
-
-        //public async Task<bool> AddOrUpdate<T>(T document) where T : class
-        //{
-        //    var indexResponse = await _client.IndexAsync(document, idx => idx.Index(_indexName));
-        //    return indexResponse.IsValid;
-        //}
 
         public async Task<T> Get<T>(string key) where T : class
         {
@@ -97,6 +98,10 @@ namespace PCM.Services
             );
             return response.Deleted;
         }
+
+        
+
+
 
 
     }

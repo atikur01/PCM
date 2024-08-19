@@ -11,6 +11,8 @@ namespace PCM.AutomapperMappingProfile
             CreateMap<Item, EsItem>();
 
             CreateMap<Comment, EsComment>();
+
+            CreateMap<Collection, EsCollection>();
         }
     }
 }

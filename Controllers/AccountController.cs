@@ -36,7 +36,6 @@ namespace PCM.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-
             return View();
         }
 
@@ -44,7 +43,6 @@ namespace PCM.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string Email, string password)
         {
-
             var user = await _userService.AuthenticateUserAsync(Email, password);
             if (user == null)
             {
@@ -67,7 +65,7 @@ namespace PCM.Controllers
         }
 
 
-        public async void AddSessionData(Guid id, string name, string email, string role, string isBlocked)
+        public void AddSessionData(Guid id, string name, string email, string role, string isBlocked)
         {
             HttpContext.Session.SetString("Id", id.ToString());
             HttpContext.Session.SetString("Name", name.ToString());
@@ -78,7 +76,15 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Logout()
         {
-            var GuidId = Guid.Parse(HttpContext.Session.GetString("Id"));
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+            var GuidId = Guid.Parse(sessionUserIdString);
+
             await _userService.LogoutAsync(GuidId);
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Account");

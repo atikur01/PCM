@@ -27,46 +27,99 @@ namespace PCM.Controllers
         [HttpPost]
         public async Task<IActionResult> BlockUsers([FromBody] List<Guid> userIds)
         {
-            await _userService.BlockUsersAsync(userIds);
-            return Ok();
+
+            if (await IsAdmin() )
+            {
+                await _userService.BlockUsersAsync(userIds);
+                return Ok();
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
         }
 
         [HttpPost]
         public async Task<IActionResult> UnblockUsers([FromBody] List<Guid> userIds)
         {
-            await _userService.UnblockUsersAsync(userIds);
-            return Ok();
+
+            if (await IsAdmin())
+            {
+                await _userService.UnblockUsersAsync(userIds);
+                return Ok();
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteUsers([FromBody] List<Guid> userIds)
         {
-            await _userService.DeleteUsersAsync(userIds);
-            return Ok();
+            if (await IsAdmin())
+            {
+                await _userService.DeleteUsersAsync(userIds);
+                return Ok();
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
         }
 
         [HttpPost]
         public async Task<IActionResult> MakeAdmins([FromBody] List<Guid> userIds)
         {
-            await _userService.MakeAdminsAsync(userIds);
-            return Ok();
+
+            if (await IsAdmin())
+            {
+                await _userService.MakeAdminsAsync(userIds);
+                return Ok();
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+
         }
 
         [HttpPost]
         public async Task<IActionResult> RemoveAdmins([FromBody] List<Guid> userIds)
         {
-            await _userService.RemoveAdminsAsync(userIds);
-            return Ok();
+
+            if (await IsAdmin())
+            {
+                await _userService.RemoveAdminsAsync(userIds);
+                return Ok();
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
         }
 
 
         public async Task<bool> IsAdmin()
         {
-            var id = Guid.Parse(HttpContext.Session.GetString("Id"));
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+
+            var id = Guid.Parse(sessionUserIdString);
 
             return await _userService.IsAdminAsync(id);
 
-
         }
+
     }
 }

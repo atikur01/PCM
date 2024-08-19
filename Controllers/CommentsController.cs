@@ -29,7 +29,6 @@ namespace PCM.Controllers
         {
             var comment = new Comment
             {
-                
                 CommentID = Guid.NewGuid(),
                 ItemId = Guid.Parse(itemid),    
                 UserName = userName,
@@ -38,14 +37,13 @@ namespace PCM.Controllers
             };
 
             _context.Comments.Add(comment);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             var mapper = config.CreateMapper();
             EsComment target = mapper.Map<EsComment>(comment);
             await _elasticsearchService.CreateIndexIfNotExists("comment-index");
-            var result = await _elasticsearchService.AddOrUpdate(target, target.CommentID);
-
+            var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
 
             return Ok(new { success = true, message = "Comment added successfully" });
         }
@@ -60,7 +58,7 @@ namespace PCM.Controllers
 
             var comments = await _context.Comments
                                          .Where(i => i.ItemId == itemid)
-                                         .OrderBy(c => c.CreatedAt) // Assuming there's a CreatedDate property
+                                         .OrderBy(c => c.CreatedAt)
                                          .AsNoTracking()
                                          .ToListAsync();
 

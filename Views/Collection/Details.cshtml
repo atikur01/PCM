@@ -109,6 +109,7 @@
                 
 
                 <td>
+                    <a href="@Url.Action("Details", "Item", new { id = item.ItemId })" class="btn btn-warning">View Item</a>
                     <a href="@Url.Action("Edit", "Item", new { id = item.ItemId })" class="btn btn-warning">Edit</a>
                     <a href="@Url.Action("Delete", "Item", new { id = item.ItemId })" class="btn btn-danger">Delete</a>
                 </td>

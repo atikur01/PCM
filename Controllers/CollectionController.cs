@@ -1,8 +1,13 @@
-﻿using Azure;
+﻿using AutoMapper;
+using Azure;
+using Elastic.Clients.Elasticsearch.Nodes;
 using Markdig;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Nest;
+using PCM.AutomapperMappingProfile;
 using PCM.Data;
+using PCM.ElasticSearchModels;
 using PCM.Models;
 using PCM.Services;
 using PCM.ViewModels;
@@ -16,25 +21,31 @@ namespace PCM.Controllers
 
         private readonly AppDbContext _context;
         private readonly CloudinaryUploader _cloudinaryUploader;
+        private readonly ElasticsearchService _elasticsearchService;
+        private readonly UserService _userService;
 
 
-        public CollectionController(AppDbContext context, CloudinaryUploader cloudinaryUploader)
+        public CollectionController(AppDbContext context, CloudinaryUploader cloudinaryUploader, ElasticsearchService elasticsearchService, UserService userService )
         {
             _context = context;
             _cloudinaryUploader = cloudinaryUploader;
+            _elasticsearchService = elasticsearchService;
+            _userService = userService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult>  Index()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role == "Admin")
+            if (await IsAdmin()) 
             {
                 return RedirectToAction("ManageUsers", "Admin");
             }
 
             var userid = HttpContext.Session.GetString("Id");
 
-            if (userid == null) return RedirectToAction("Login", "Account");
+            if (userid == null)
+            {
+                RedirectToAction("Login", "Account");
+            }
 
             return RedirectToAction("IndexByUserID", new { userid = userid });
 
@@ -42,66 +53,114 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> IndexByUserID(Guid userid)
         {
-            ViewBag.UserId = userid;
+ 
+            if (await IsAdmin() || IsValidUser(userid) )
+            {
+                ViewBag.UserId = userid;
 
-            var collections = await _context.Collections
-            .Where(c => c.UserId == userid)
-            .ToListAsync();
+                var collections = await _context.Collections
+                .Where(c => c.UserId == userid)
+                .ToListAsync();
 
-            return View(collections);
+                return View(collections);
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
 
         }
 
-
-        public IActionResult Create()
-        {
-            return View();
-        }
 
         [HttpGet]
-        public IActionResult CreateByUserID(Guid userid)
+        public async Task<IActionResult> CreateByUserIDAsync(Guid userid)
         {
-            ViewBag.UserId = userid;
-            return View();
+
+            if (await IsAdmin() || IsValidUser(userid))
+            {
+                ViewBag.UserId = userid;
+                return View();
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+        }
+
+        public async Task<bool> IsAdmin()
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+
+            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+
+            return await _userService.IsAdminAsync(sessionUserIdGuid);
         }
 
 
         [HttpPost]
         public async Task<IActionResult> Create(Collection collection, IFormFile Image)
         {
-            string ImageUrl = await Upload(Image);
 
-            if (collection.Description == null)
+            if( await IsAdmin() || IsValidUser(collection.UserId)  )
             {
-                collection.Description = "";
+                string? ImageUrl = await Upload(Image);
+
+                if (collection.Description == null)
+                {
+                    collection.Description = "";
+                }
+
+                var htmlContent = Markdown.ToHtml(collection.Description);
+                collection.Description = htmlContent;
+                collection.CollectionId = Guid.NewGuid();
+                collection.ImageUrl = ImageUrl;
+                collection.CreatedAt = DateTime.Now;
+                collection.TotalItems = 0;
+
+                _context.Collections.Add(collection);
+                await _context.SaveChangesAsync();
+
+
+                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                var mapper = config.CreateMapper();
+                EsCollection target = mapper.Map<EsCollection>(collection);
+                await _elasticsearchService.CreateIndexIfNotExists("collection-index");
+                var result = await _elasticsearchService.AddOrUpdate(target, target.CollectionId);
+
+                return RedirectToAction("IndexByUserID", new { userid = collection.UserId });
             }
-
-            var htmlContent = Markdown.ToHtml(collection.Description);
-            collection.Description = htmlContent;
-            collection.CollectionId = Guid.NewGuid();
-            collection.ImageUrl = ImageUrl;
-            collection.CreatedAt = DateTime.Now;
-            collection.TotalItems = 0;
-            _context.Collections.Add(collection);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("IndexByUserID", new { userid = collection.UserId });
-
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
 
         }
 
         public async Task<IActionResult> Details(Guid id)
         {
-
-
             var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
+
             if (collection == null)
             {
                 return NotFound();
             }
-            return View(collection);
+
+            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            {
+                return View(collection);
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
         }
-
-
 
 
         public async Task<string?> Upload(IFormFile file)
@@ -123,55 +182,104 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Delete(Guid id)
         {
-            var collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == id);
-            await _cloudinaryUploader.RemoveImageAsync(collection.ImageUrl);
-            _context.Collections.Remove(collection);
-            _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            Collection? collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == id);
+
+            if(collection == null)
+            {
+                return NotFound();
+            }
+
+            if (await IsAdmin() || IsValidUser(collection.UserId)  )
+            {
+                if(collection.ImageUrl != null)
+                {
+                    await _cloudinaryUploader.RemoveImageAsync(collection.ImageUrl);
+                }
+
+                _context.Collections.Remove(collection);
+
+                var items = await _context.Items.Where(i => i.CollectionId == id).ToListAsync();
+
+                foreach (var item in items)
+                {
+                    _elasticsearchService.SetIndex("item-index");
+                    await _elasticsearchService.Remove<dynamic>(item.ItemId.ToString());
+                }
+
+                foreach (var item in items)
+                {
+                    _elasticsearchService.SetIndex("comment-index");
+                    await _elasticsearchService.Remove<dynamic>(item.ItemId.ToString());
+                }
+
+                _elasticsearchService.SetIndex("collection-index");
+                await _elasticsearchService.Remove<dynamic>(id.ToString());
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
 
         }
 
 
         public async Task<IActionResult> Edit(Guid id)
         {
-            var userId = await _context.Collections
-                .Where(c => c.CollectionId == id)
-                .Select(c => c.UserId)
-                .FirstOrDefaultAsync();
-
-            ViewBag.UserId = userId;
-
-
             var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
-            ViewBag.CreatedAt = collection.CreatedAt;
+           
+            if(collection == null) return NotFound();
 
-            return View(collection);
+            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            {
+                return View(collection);
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+  
         }
 
 
         [HttpPost]
         public async Task<IActionResult> Edit(Collection collection, IFormFile Image)
         {
+            if (collection == null) return NotFound();
 
-            try
+            if (await IsAdmin() || IsValidUser(collection.UserId) )
             {
-                // Upload image if exists
-                if (Image != null)
+                try
                 {
-                    string imageUrl = await Upload(Image);
-                    collection.ImageUrl = imageUrl;
+                    if (Image != null)
+                    {
+                        string? imageUrl = await Upload(Image);
+                        collection.ImageUrl = imageUrl;
+                    }
+
+                    _context.Entry(collection).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+
+
+                    var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                    var mapper = config.CreateMapper();
+                    EsCollection target = mapper.Map<EsCollection>(collection);
+                    _elasticsearchService.Index("collection-index");
+                    var result = await _elasticsearchService.AddOrUpdate(target, target.CollectionId);
                 }
-                // Mark the entity as modified
-                _context.Entry(collection).State = EntityState.Modified;
+                catch (Exception ex)
+                {
+                    Log.Information(ex.Message.ToString());
+                }
 
-                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            else
             {
-                Log.Information(ex.Message.ToString());
+                return RedirectToAction("AccessDenied", "Home");
             }
-
-            return RedirectToAction(nameof(Index));
 
         }
 
@@ -181,7 +289,8 @@ namespace PCM.Controllers
             return View(collection);
         }
 
-        public async Task<IActionResult> DetailsView(Guid id)
+        //Collection Details View for non authenticated users
+        public async Task<IActionResult> DetailsPublic(Guid id)
         {
             var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
             if (collection == null)
@@ -191,16 +300,25 @@ namespace PCM.Controllers
             return View(collection);
         }
 
-
-        public async Task<IActionResult> CollectionDetails(Guid id)
+      
+        public bool IsValidUser(Guid userid)
         {
-            var collection = await _context.Collections.Include(c => c.Items).FirstOrDefaultAsync(c => c.CollectionId == id);
-            if (collection == null)
-            {
-                return NotFound();
-            }
-            return View(collection);
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
 
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+               return false;
+            }
+            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+
+            if (sessionUserIdGuid == userid)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
 
         }
 

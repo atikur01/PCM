@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var sessionValue = HttpContextAccessor.HttpContext.Session.GetString("Id");
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -30,20 +36,28 @@
                     <a class="nav-link" asp-area="" asp-controller="Collection" asp-action="AllCollections">Collections</a>
                 </li>
 
-                <li class="nav-item" id="loginLink">
-                    <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
-                </li>
-
-                <li class="nav-item" id="registerLink">
-                    <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
-                </li>
+                @if (sessionValue != null)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
+                    </li>
+                }
 
 
 
 
             </ul>
-            <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Search" asp-action="Index" method="GET">
-                <input class="form-control mr-sm-2" type="search" name="query" placeholder="Search items..." aria-label="Search" required>
+            <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Search" asp-action="Index" method="Post">
+                <input class="form-control mr-sm-2" type="search" name="keyword" placeholder="Search items..." aria-label="Search" required>
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
         </div>

@@ -10,6 +10,7 @@ namespace PCM.Models
 
         public Guid CollectionId { get; set; }
 
+        public Guid UserId { get; set; }    
         public string? Author { get; set; }
 
         public string? CollectionName { get; set; }

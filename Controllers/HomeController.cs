@@ -25,10 +25,6 @@ namespace PCM.Controllers
 
         public async Task<IActionResult>  Index()
         {
-            
-
-
-
             var items = await _context.Items
                   .OrderByDescending(item => item.CreatedAt)
                   .Take(6)
@@ -52,11 +48,14 @@ namespace PCM.Controllers
                 .ToListAsync();
 
             var taglist = new Dictionary<string, string>();
+
             int i = 1;
             foreach (var tag in topTags)
             {
-                taglist.Add( "Tag"+i , tag.TagName);
-                i++;
+                if(tag.TagName != null){
+                    taglist.Add("Tag" + i, tag.TagName);
+                    i++;
+                }
             }
 
 
@@ -83,5 +82,15 @@ namespace PCM.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+
     }
+
+
+  
 }

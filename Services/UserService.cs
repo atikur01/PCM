@@ -52,7 +52,6 @@ namespace PCM.Services
                 return null;
             }   
 
-
             user.IsActive = true;
 
             _context.Entry(user).State = EntityState.Modified;

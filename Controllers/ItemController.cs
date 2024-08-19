@@ -22,9 +22,6 @@ using AutoMapper;
 using PCM.AutomapperMappingProfile;
 using PCM.ElasticSearchModels;
 
-
-
-
 namespace PCM.Controllers
 {
     public class ItemController : Controller
@@ -32,12 +29,46 @@ namespace PCM.Controllers
         private readonly AppDbContext _context;
 
         private readonly ElasticsearchService _elasticsearchService;
+        private readonly UserService _userService;
 
-        public ItemController(AppDbContext context, ElasticsearchService elasticsearchService) 
+        public ItemController(AppDbContext context, ElasticsearchService elasticsearchService, UserService userService ) 
         {
             _context = context;
             _elasticsearchService = elasticsearchService;
+            _userService = userService;
 
+        }
+
+        public async Task<bool> IsAdmin()
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+
+            var id = Guid.Parse(sessionUserIdString);
+            return await _userService.IsAdminAsync(id);
+        }
+
+        public bool IsValidUser(Guid userid)
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return false;
+            }
+            var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+
+            if (sessionUserIdGuid == userid)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public async Task<IActionResult> Create(Guid collectionId)
@@ -51,16 +82,20 @@ namespace PCM.Controllers
                 return NotFound("Collection not found.");
             }
 
-            var newItem = new Item
+            if (await IsAdmin() || IsValidUser(collection.UserId)  )
             {
-                CollectionId = collectionId,
-                Collection = collection
-            };
+                var newItem = new Item
+                {
+                    CollectionId = collectionId,
+                    Collection = collection
+                };
+                return View(newItem);
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
 
-
-            
-   
-            return View(newItem);
         }
 
         [HttpPost]
@@ -80,35 +115,41 @@ namespace PCM.Controllers
                 return NotFound("Collection not found.");
             }
 
-            item.CollectionName = collection.Name;
-            collection.TotalItems++;
-            _context.Collections.Update(collection);
-
-            var user = await _context.Users.FindAsync(collection.UserId);
-            if (user == null)
+            if (await IsAdmin() || IsValidUser(collection.UserId) )
             {
-                return NotFound("User not found.");
+                item.CollectionName = collection.Name;
+                collection.TotalItems++;
+                _context.Collections.Update(collection);
+
+                var user = await _context.Users.FindAsync(collection.UserId);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                item.Author = user.Name;
+                item.UserId = collection.UserId;
+
+                _context.Items.Add(item);
+
+
+                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                var mapper = config.CreateMapper();
+                EsItem target = mapper.Map<EsItem>(item);
+                await _elasticsearchService.CreateIndexIfNotExists("item-index");
+                await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+
+                // Process and add tags, skipping the first tag in the list
+                ProcessTags(item);
+
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
             }
-
-            item.Author = user.Name;
-
-            _context.Items.Add(item);
-
-
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-            var mapper = config.CreateMapper();
-            EsItem target = mapper.Map<EsItem>(item);
-            await _elasticsearchService.CreateIndexIfNotExists("item-index");
-            var result = await _elasticsearchService.AddOrUpdate(target , target.ItemId);
-
-
-
-            // Process and add tags, skipping the first tag in the list
-            ProcessTags(item);
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
         }
 
         public async Task<IActionResult> Edit(Guid id)
@@ -130,14 +171,34 @@ namespace PCM.Controllers
             }
 
             var collection = await _context.Collections.FindAsync(item.CollectionId);
-            ViewBag.Collection = collection;
 
-            var user = await _context.Users.FindAsync(collection.UserId);
+            if(collection == null)
+            {
+                return NotFound("Collection not found.");
+            }   
 
-            ViewBag.CollectionName = collection.Name;
-            ViewBag.CreatedAt = item.CreatedAt;
+            if (await IsAdmin() || IsValidUser(collection.UserId) )
+            {
+                ViewBag.Collection = collection;
 
-            return View(item);
+                var user = await _context.Users.FindAsync(collection.UserId);
+
+                if(user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                ViewBag.CollectionName = collection.Name;
+                ViewBag.CreatedAt = item.CreatedAt;
+                ViewBag.UserId = user.UserId;
+
+                return View(item);
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
         }
 
         [HttpPost]
@@ -151,17 +212,24 @@ namespace PCM.Controllers
             _context.Tags.RemoveRange(_context.Tags.Where(t => t.ItemId == item.ItemId));
             ProcessTags(item);
 
-            _context.Items.Update(item);
+            if (await IsAdmin() || IsValidUser(item.UserId) )
+            {
+                _context.Items.Update(item);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-            var mapper = config.CreateMapper();
-            EsItem target = mapper.Map<EsItem>(item);
-            await _elasticsearchService.CreateIndexIfNotExists("item-index");
-            var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                var mapper = config.CreateMapper();
+                EsItem target = mapper.Map<EsItem>(item);
+                _elasticsearchService.Index("item-index");
+                await _elasticsearchService.AddOrUpdate(target, target.ItemId);
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+                return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
         }
 
         public async Task<IActionResult> Delete(Guid id)
@@ -172,26 +240,28 @@ namespace PCM.Controllers
                 return NotFound("Item not found.");
             }
 
-            _context.Items.Remove(item);
+            if (await IsAdmin() ||  IsValidUser(item.UserId) )
+            {
+                _context.Items.Remove(item);
 
-            await _elasticsearchService.CreateIndexIfNotExists("item-index");
-            await _elasticsearchService.Remove<dynamic>(id.ToString());
+                _elasticsearchService.Index("item-index");
+                await _elasticsearchService.Remove<dynamic>(id.ToString());
 
-            
+                var tags = await _context.Tags.Where(t => t.ItemId == id).ToListAsync();
 
+                _elasticsearchService.Index("comment-index");
+                await _elasticsearchService.Remove<dynamic>(id.ToString());
 
-            var tags = await _context.Tags.Where(t => t.ItemId == id).ToListAsync();
+                _context.Tags.RemoveRange(tags);
 
+                await _context.SaveChangesAsync();
 
-            _context.Tags.RemoveRange(tags);
-
-            await _context.SaveChangesAsync();
-
-            await _elasticsearchService.CreateIndexIfNotExists("comment-index");
-            await _elasticsearchService.RemoveByTextMatch<Item>("item_id", id.ToString() );
-
-
-            return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+                return RedirectToAction("Details", "Collection", new { id = item.CollectionId });
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }   
         }
 
         private void ProcessTags(Item item)
@@ -208,15 +278,12 @@ namespace PCM.Controllers
                         Name = tag
                     };
                     _context.Tags.Add(tagobj);
-
-
                 }
             }
         }
 
         public async Task<IActionResult> Details(Guid id)
         {
-            // Fetch item along with its collection and user details in a single query if possible
             var item = await _context.Items
                 .Include(i => i.Collection)
                 .ThenInclude(c => c.User)
@@ -227,7 +294,6 @@ namespace PCM.Controllers
                 return NotFound("Item not found.");
             }
 
-            // Fetch tags related to the item
             var tags = await _context.Tags
                 .Where(t => t.ItemId == id)
                 .Select(t => t.Name)
@@ -239,8 +305,6 @@ namespace PCM.Controllers
                 return NotFound("Tags not found.");
             }
 
-
-            // Fetch the like for the item
             var like = await _context.Likes
                 .FirstOrDefaultAsync(l => l.ItemId == id);
 
@@ -250,11 +314,9 @@ namespace PCM.Controllers
             {
                 likeobj = new Models.Like
                 {
-
                     ItemId = id
                 };
             }
-
 
             Guid VisitorUserId = Guid.NewGuid();
 
@@ -276,8 +338,6 @@ namespace PCM.Controllers
                 Log.Information("User not logged in");
             }
 
-            
-            
 
             var existingLike = await _context.Likes.AnyAsync(l => l.VisitorUserID == VisitorUserId && l.ItemId == id);
 
@@ -321,63 +381,81 @@ namespace PCM.Controllers
         [HttpPost]
         public async Task<IActionResult> Like(Models.Like like)
         {
-            like.LikeID = Guid.NewGuid();
-            var itemid = Guid.Parse(like.ItemId.ToString());
-
-            var existingLike = await _context.Likes
-                .FirstOrDefaultAsync(l => l.VisitorUserID == like.VisitorUserID && l.ItemId == like.ItemId);
-
-            if (existingLike == null)
+            if (like == null)
             {
-                // Initialize the like count to zero for the new like
-
-                _context.Likes.Add(like);
-
-
-                if (await _context.ItemLikeCounts.FirstOrDefaultAsync(l => l.ItemId == like.ItemId) == null)
-                {
-                    _context.ItemLikeCounts.Add(new ItemLikeCount
-                    {
-                        ItemLikeCountId = Guid.NewGuid(),
-                        ItemId = itemid,
-                        LikeCount = 1
-                    });
-                }
-                else
-                {
-                    _context.ItemLikeCounts.First(l => l.ItemId == like.ItemId).LikeCount++;
-                }
-
-                await _context.SaveChangesAsync();
-                // Return the updated like count
-                var likeCount = await _context.ItemLikeCounts
-                    .Where(ilc => ilc.ItemId == itemid)
-                    .Select(ilc => ilc.LikeCount) // Assuming "Count" is the column holding the number of likes
-                    .FirstOrDefaultAsync();
-
-                return Json(new { success = true, likeCount });
+                return BadRequest("Invalid like data.");
             }
 
-            return Json(new { success = false, message = "You have already liked this item." });
+            if (IsValidUser( Guid.Parse(like.VisitorUserID.ToString() )  ))
+            {
+                like.LikeID = Guid.NewGuid();
+                var itemid = Guid.Parse(like.ItemId.ToString());
+
+                var existingLike = await _context.Likes
+                    .FirstOrDefaultAsync(l => l.VisitorUserID == like.VisitorUserID && l.ItemId == like.ItemId);
+
+                if (existingLike == null)
+                {
+                    // Initialize the like count to zero for the new like
+
+                    _context.Likes.Add(like);
+
+
+                    if (await _context.ItemLikeCounts.FirstOrDefaultAsync(l => l.ItemId == like.ItemId) == null)
+                    {
+                        _context.ItemLikeCounts.Add(new ItemLikeCount
+                        {
+                            ItemLikeCountId = Guid.NewGuid(),
+                            ItemId = itemid,
+                            LikeCount = 1
+                        });
+                    }
+                    else
+                    {
+                        _context.ItemLikeCounts.First(l => l.ItemId == like.ItemId).LikeCount++;
+                    }
+
+                    await _context.SaveChangesAsync();
+                    // Return the updated like count
+                    var likeCount = await _context.ItemLikeCounts
+                        .Where(ilc => ilc.ItemId == itemid)
+                        .Select(ilc => ilc.LikeCount) 
+                        .FirstOrDefaultAsync();
+
+                    return Json(new { success = true, likeCount });
+                }
+
+                return Json(new { success = false, message = "You have already liked this item." });
+
+            }
+            else
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
         }
 
         public async Task<IActionResult>  SearchByTagName(string tagName)
         {
+            if(tagName == null)
+            {
+                return BadRequest("Invalid tag name.");
+            }   
+
             var itemIds = await _context.Tags
                 .Where(e => e.Name == tagName)
                 .ToListAsync();
+
             var items = new List<Item>();
 
-            itemIds.ForEach(e =>
+            itemIds.ForEach(async e =>
             {
-                var item = _context.Items.FirstOrDefault(i => i.ItemId == e.ItemId);
+                var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == e.ItemId);
                 if (item != null)
                 {
                     items.Add(item);
                 }
             });
-
-
 
             return View(items);
         }

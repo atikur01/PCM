@@ -20,7 +20,9 @@ namespace PCM
             {
                 var builder = WebApplication.CreateBuilder(args);
 
-            var settings = new ConnectionSettings(new Uri("https://24.144.112.56:9200"))
+                builder.Services.AddHttpContextAccessor();
+
+                var settings = new ConnectionSettings(new Uri("https://24.144.112.56:9200"))
                 .ServerCertificateValidationCallback(CertificateValidations.AllowAll)
                 .BasicAuthentication("elastic", "2yUqvTzesI9M=vqcegwx")
                 .EnableApiVersioningHeader();
