@@ -330,7 +330,7 @@ namespace PCM.Controllers
                 likeobj = like;
             }
 
-            // Create the ViewModel
+
             var itemDetailsViewModel = new ItemDetailsViewModel
             {
                 item = item,

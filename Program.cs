@@ -40,7 +40,7 @@ namespace PCM
 
             // Configure Serilog
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(builder.Configuration)  // Reads configuration from appsettings.json
+                .ReadFrom.Configuration(builder.Configuration)
                 .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Error)  // Logs from Microsoft namespace
                 .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Error)  // Logs from System namespace
                 .Enrich.FromLogContext()  // Enrich logs with context information
@@ -59,7 +59,7 @@ namespace PCM
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-            builder.Services.AddSignalR(); // Add SignalR
+            builder.Services.AddSignalR();
 
             // Add CORS services
             builder.Services.AddCors(options =>
@@ -83,7 +83,6 @@ namespace PCM
             // Register CloudinaryUploader as a singleton
             builder.Services.AddSingleton<CloudinaryUploader>();
 
-            
 
             // Add distributed memory cache and session services
             builder.Services.AddDistributedMemoryCache();
@@ -113,13 +112,13 @@ namespace PCM
                 app.UseCors("AllowAll");
                 app.UseAuthorization();
 
-                app.UseSession(); // Ensure session is enabled before routing or SignalR
+                app.UseSession();
 
                 app.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-                app.MapHub<CommentHub>("/commentHub"); // Map SignalR hub
+                app.MapHub<CommentHub>("/commentHub");
 
                 app.Run();
             }

@@ -13,7 +13,7 @@ namespace PCM.ElasticSearchModels
         [PropertyName("comment_id")]
         public Guid CommentID { get; set; }
 
-        [Ignore] // If you don't want to index the full Item object
+        [Ignore]
         public Item Item { get; set; }
 
         [PropertyName("user_name")]
