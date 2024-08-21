@@ -73,9 +73,15 @@ namespace PCM
                     });
             });
 
-            // Configure EF Core with SQL Server
+
+            //builder.Services.AddDbContext<AppDbContext>(options =>
+            //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Configure EF Core with SQL Server docker container
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer("Server=167.99.127.42,1433;Database=CollectionManagement;User Id=sa;Password=67EVzrft;Trusted_Connection=False;MultipleActiveResultSets=true;Encrypt=False;"));
+
+
 
             // Register UserService as a scoped dependency
             builder.Services.AddScoped<UserService>();
