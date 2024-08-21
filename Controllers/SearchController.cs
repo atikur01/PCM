@@ -1,6 +1,7 @@
 ﻿
 using CloudinaryDotNet.Core;
 using Elastic.Clients.Elasticsearch;
+using Elasticsearch.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,7 @@ namespace PCM.Controllers
             {
                 Query = keyword,
                 DefaultOperator = Operator.And // Use AND to match all terms
+                
             };
 
             _elasticsearchService.Index("item-index");

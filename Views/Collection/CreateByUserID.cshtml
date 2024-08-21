@@ -3,6 +3,9 @@
 ﻿@{
     ViewData["Title"] = "Tags";
     var UserId = ViewBag.UserId;
+
+    var categories = ViewBag.Categories;
+
 }
 
 @section Styles {
@@ -36,10 +39,16 @@
     <div class="form-group">
         <label asp-for="CategoryName"></label>
         <select asp-for="CategoryName" class="form-control" required>
-            <option value="Books">Books</option>
-            <option value="Signs">Signs</option>
-            <option value="Silverware">Silverware</option>
-            <option value="Other">Other</option>
+
+            @if (categories != null)
+            {
+                foreach (var category in categories)
+                {
+                    <option value="@category.Name">@category.Name</option>
+                }
+            }
+
+
         </select>
     </div>
 

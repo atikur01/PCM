@@ -73,12 +73,18 @@ namespace PCM.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> CreateByUserIDAsync(Guid userid)
+        public async Task<IActionResult> CreateByUserID(Guid userid)
         {
 
             if (await IsAdmin() || await IsValidUserAsync(userid))
             {
                 ViewBag.UserId = userid;
+
+                var categories = await _context.Categories.ToListAsync();
+
+                ViewBag.Categories = categories;
+
+
                 return View();
             }
             else
