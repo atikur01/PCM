@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v2
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '8.0'
+
+    - name: Restore dependencies
+      run: dotnet restore "PCM.csproj"
+
+    - name: Build the app
+      run: dotnet build "PCM.csproj" --configuration Release --no-restore
+
+    - name: Test the app
+      run: dotnet test --no-restore --verbosity normal
+
+    - name: Publish the app
+      run: dotnet publish "PCM.csproj" --configuration Release --output ./out --no-restore
+
+    - name: Build Docker image
+      run: docker build -t coc13259/PCM:latest .
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Push Docker image
+      run: docker push coc13259/PCM:latest
+
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
+    - name: Deploy to server
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        IMAGE_NAME: "coc13259/PCM"
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_USER: ${{ secrets.SSH_USER }}
+      run: |
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          docker stop $(docker ps -q --filter "ancestor=coc13259/PCM")
+          docker rm $(docker ps -a -q --filter "ancestor=coc13259/PCM")
+          docker rmi -f coc13259/PCM
+          docker pull coc13259/PCM
+          docker stop PCM || true
+          docker rm PCM || true
+          docker run -d -p 80:8080 --name PCM coc13259/PCM
+        EOF
+      shell: bash
