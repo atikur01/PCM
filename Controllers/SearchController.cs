@@ -28,27 +28,28 @@ namespace PCM.Controllers
             _elasticsearchService = elasticsearchService;
         }
 
+
         [HttpPost]
         public async Task<IActionResult> Index(string keyword)
         {
-            if(string.IsNullOrEmpty(keyword))
+            if (string.IsNullOrEmpty(keyword))
             {
                 return RedirectToAction("Index", "Home");
-            }   
+            }
 
-            var itemids = new List<string>();
+            var itemIds = new HashSet<string>();
             var items = new List<Item>();
 
-            var collectionids = new List<string>();
+            var collectionIds = new HashSet<string>();
             var collections = new List<Collection>();
 
             var query = new SimpleQueryStringQuery
             {
                 Query = keyword,
-                DefaultOperator = Operator.And // Use AND to match all terms
-                
+                DefaultOperator = Operator.Or
             };
 
+            // Search items
             _elasticsearchService.Index("item-index");
             var resultsItems = await _elasticsearchService.Query<dynamic>(query);
 
@@ -56,47 +57,46 @@ namespace PCM.Controllers
             {
                 foreach (var result in resultsItems)
                 {
-                    // Assuming 'result' is of type Dictionary<string, object>
                     if (result.TryGetValue("item_id", out object itemIdValue))
                     {
                         var itemId = itemIdValue.ToString();
-                        itemids.Add(itemId);
+                        itemIds.Add(itemId);
                     }
-
                 }
-
             }
-            
 
+            // Search comments
             _elasticsearchService.Index("comment-index");
             var resultComments = await _elasticsearchService.Query<dynamic>(query);
 
-
-            if(resultComments != null)
+            if (resultComments != null)
             {
                 foreach (var result in resultComments)
                 {
                     if (result.TryGetValue("item_id", out object itemIdValue))
                     {
                         var itemId = itemIdValue.ToString();
-                        itemids.Add(itemId);
+                        itemIds.Add(itemId);
                     }
-
                 }
             }
 
-
-            if(itemids.Count > 0)
+            // Fetch distinct items
+            if (itemIds.Count > 0)
             {
-                foreach (var itemid in itemids)
+                foreach (var itemId in itemIds)
                 {
-                    var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == Guid.Parse(itemid));
+                    var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == Guid.Parse(itemId));
                     if (item != null)
+                    {
                         items.Add(item);
+                    }
                 }
-            }   
 
-   
+                items = items.Distinct().ToList();
+            }
+
+            // Search collections
             _elasticsearchService.Index("collection-index");
             var resultCollection = await _elasticsearchService.Query<dynamic>(query);
 
@@ -107,32 +107,37 @@ namespace PCM.Controllers
                     if (result.TryGetValue("collection_id", out object collectionIdValue))
                     {
                         var collectionId = collectionIdValue.ToString();
-                        collectionids.Add(collectionId);
+                        collectionIds.Add(collectionId);
                     }
-
                 }
             }
 
-           
-            if(collectionids.Count > 0)
+            // Fetch distinct collections
+            if (collectionIds.Count > 0)
             {
-                foreach (var collectionid in collectionids)
+                foreach (var collectionId in collectionIds)
                 {
-                    var item = await _context.Collections.FirstOrDefaultAsync(i => i.CollectionId == Guid.Parse(collectionid));
-                    collections.Add(item);
+                    var collection = await _context.Collections.FirstOrDefaultAsync(i => i.CollectionId == Guid.Parse(collectionId));
+                    if (collection != null)
+                    {
+                        collections.Add(collection);
+                    }
                 }
+
+                collections = collections.Distinct().ToList();
             }
 
             var searchResults = new SearchViewModel
             {
                 Items = items,
-                Collections = collections,  
+                Collections = collections,
                 Keyword = keyword
             };
 
-
-            return View(searchResults); 
+            return View(searchResults);
         }
+
+
     }
 }
     

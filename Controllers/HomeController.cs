@@ -83,6 +83,7 @@ namespace PCM.Controllers
 
         public IActionResult AccessDenied()
         {
+            HttpContext.Session.Clear();
             return View();
         }
 

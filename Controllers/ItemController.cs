@@ -460,7 +460,9 @@ namespace PCM.Controllers
 
             var isUserExist = await _userService.GetUserByIdAsync(userid);
 
-            if (sessionUserIdGuid == userid && isUserExist != null)
+            var IsUserBlocked = await _userService.IsBlocked(userid);
+
+            if (sessionUserIdGuid == userid && isUserExist != null && IsUserBlocked==false)
             {
                 return true;
             }

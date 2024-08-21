@@ -315,10 +315,11 @@ namespace PCM.Controllers
                 return false;
             }
             var sessionUserIdGuid = Guid.Parse(sessionUserIdString);
+            var IsUserBlocked = await _userService.IsBlocked(userid);   
 
             var isUserExist = await _userService.GetUserByIdAsync(userid);
 
-            if (sessionUserIdGuid == userid && isUserExist != null)
+            if (sessionUserIdGuid == userid && isUserExist != null  && IsUserBlocked==false )
             {
                 return true;
             }

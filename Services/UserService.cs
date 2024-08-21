@@ -143,14 +143,12 @@ namespace PCM.Services
 
         public async Task<User?> GetUserByIdAsync(Guid id)
         {
-            // Retrieve the user by ID asynchronously
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.UserId == id);
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
-
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
@@ -165,6 +163,21 @@ namespace PCM.Services
             }
 
             return user.Role == UserRole.Admin && !user.IsBlocked;
+        }
+
+        public async Task<bool> IsBlocked(Guid id)
+        {
+            var user = await GetUserByIdAsync(id);
+
+            if (user == null)
+            {
+                return true;
+            }
+            else
+            {
+                return user.IsBlocked;
+            }
+  
         }
 
         
