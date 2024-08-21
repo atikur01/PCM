@@ -46,7 +46,7 @@ namespace PCM.Controllers
             var query = new SimpleQueryStringQuery
             {
                 Query = keyword,
-                DefaultOperator = Operator.Or
+                DefaultOperator = Operator.And
             };
 
             // Search items
