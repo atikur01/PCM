@@ -25,17 +25,22 @@ namespace PCM.Controllers
 
         public async Task<IActionResult>  Index()
         {
+            var ItemsToTake = 6;
             var items = await _context.Items
                   .OrderByDescending(item => item.CreatedAt)
-                  .Take(6)
+                  .Take(ItemsToTake)
                   .ToListAsync();
 
+
+            var CollectionToTake = 5;
             var topCollections = await _context.Collections
                  .Include(c => c.Items)
                  .OrderByDescending(c => c.Items.Count)
-                 .Take(5)
+                 .Take(CollectionToTake)
                  .ToListAsync();
 
+
+            var TagToTake = 7;
             var topTags =await _context.Tags
                 .GroupBy(t => t.Name)
                 .Select(g => new
@@ -44,10 +49,12 @@ namespace PCM.Controllers
                     Count = g.Count()
                 })
                 .OrderByDescending(t => t.Count)
-                .Take(7)
+                .Take(TagToTake)
                 .ToListAsync();
 
+
             var taglist = new Dictionary<string, string>();
+            
 
             int i = 1;
             foreach (var tag in topTags)
@@ -75,17 +82,19 @@ namespace PCM.Controllers
             return View();
         }
 
+        public IActionResult AccessDenied()
+        {
+            HttpContext.Session.Clear();
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult AccessDenied()
-        {
-            HttpContext.Session.Clear();
-            return View();
-        }
+        
 
 
     }

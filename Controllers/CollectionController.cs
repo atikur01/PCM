@@ -42,14 +42,13 @@ namespace PCM.Controllers
             {
                 return RedirectToAction("ManageUsers", "Admin");
             }
-
+            //For non-admin users   
             return RedirectToAction("IndexByUserID", new { userid = userid });
 
         }
 
         public async Task<IActionResult> IndexByUserID(Guid userid)
         {
- 
             if (await IsAdmin() || await IsValidUserAsync(userid) )
             {
                 ViewBag.UserId = userid;
@@ -112,7 +111,7 @@ namespace PCM.Controllers
                 _context.Collections.Add(collection);
                 await _context.SaveChangesAsync();
 
-
+                //Save to ElasticSearch
                 var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
                 var mapper = config.CreateMapper();
                 EsCollection target = mapper.Map<EsCollection>(collection);

@@ -92,8 +92,6 @@ namespace PCM.Controllers
                         items.Add(item);
                     }
                 }
-
-                items = items.Distinct().ToList();
             }
 
             // Search collections
@@ -124,7 +122,6 @@ namespace PCM.Controllers
                     }
                 }
 
-                collections = collections.Distinct().ToList();
             }
 
             var searchResults = new SearchViewModel

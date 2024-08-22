@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using PCM.Models;
 using PCM.Services;
 
@@ -27,6 +29,7 @@ namespace PCM.Controllers
                     ModelState.AddModelError("", "This email is already registered.");
                     return View();
                 }
+                //After successfull registration, redirect to login page
                 return RedirectToAction("Login");
             }
             return View();
@@ -49,7 +52,16 @@ namespace PCM.Controllers
                 return View();
             }
 
-            AddSessionData(user.UserId, user.Name, user.Email, user.Role, user.IsBlocked.ToString());
+            var sessionData = new Dictionary<string, string>
+            {
+                { "Id", user.UserId.ToString() },
+                { "Name", user.Name },
+                { "Email", user.Email },
+                { "Role", user.Role },
+                { "IsBlocked", user.IsBlocked.ToString() }
+            };
+
+            AddSessionData(sessionData);
 
             if (user.Role == UserRole.Admin)
             {
@@ -64,18 +76,18 @@ namespace PCM.Controllers
         }
 
 
-        public void AddSessionData(Guid id, string name, string email, string role, string isBlocked)
+        public void AddSessionData(Dictionary<string, string> sessionData)
         {
-            HttpContext.Session.SetString("Id", id.ToString());
-            HttpContext.Session.SetString("Name", name.ToString());
-            HttpContext.Session.SetString("Email", email);
-            HttpContext.Session.SetString("Role", role);
-            HttpContext.Session.SetString("IsBlocked", isBlocked);
+            foreach (var data in sessionData)
+            {
+                HttpContext.Session.SetString(data.Key, data.Value);
+            }
         }
+
 
         public async Task<IActionResult> Logout()
         {
-            var sessionUserIdString = HttpContext.Session.GetString("Id");
+            string sessionUserIdString = HttpContext.Session.GetString("Id") ?? string.Empty;
 
             if (string.IsNullOrEmpty(sessionUserIdString))
             {

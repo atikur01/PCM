@@ -263,6 +263,7 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Details(Guid id)
         {
+            // Fetch item with related collection and user details
             var item = await _context.Items
                 .Include(i => i.Collection)
                 .ThenInclude(c => c.User)
@@ -273,85 +274,77 @@ namespace PCM.Controllers
                 return NotFound("Item not found.");
             }
 
+            // Fetch tags associated with the item
             var tags = await _context.Tags
                 .Where(t => t.ItemId == id)
                 .Select(t => t.Name)
                 .Distinct()
                 .ToListAsync();
 
+            // Fetch the like associated with the item, if it exists
             var like = await _context.Likes
                 .FirstOrDefaultAsync(l => l.ItemId == id);
 
-            Models.Like likeobj = null;
-
-            if (like == null)
+            // Initialize like object if no like exists for the item
+            var likeObj = like ?? new Models.Like
             {
-                likeobj = new Models.Like
-                {
-                    ItemId = id
-                };
-            }
+                ItemId = id
+            };
 
-            Guid VisitorUserId = Guid.NewGuid();
+            Guid visitorUserId = Guid.Empty;
 
             try
             {
-                if (HttpContext.Session.GetString("Id") == null)
+                // Retrieve VisitorUserId from session if available
+                var sessionUserId = HttpContext.Session.GetString("Id");
+                if (string.IsNullOrEmpty(sessionUserId))
                 {
                     ViewBag.Liked = true;
                 }
                 else
                 {
-                    VisitorUserId = Guid.Parse(HttpContext.Session.GetString("Id"));
-                    ViewBag.VisitorUserId = VisitorUserId;
+                    visitorUserId = Guid.Parse(sessionUserId);
+                    ViewBag.VisitorUserId = visitorUserId;
+
+                    // Check if the visitor has already liked the item
+                    var existingLike = await _context.Likes
+                        .AnyAsync(l => l.VisitorUserID == visitorUserId && l.ItemId == id);
+
+                    ViewBag.Liked = existingLike;
                 }
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Information("User not logged in");
-            }
-
-
-            var existingLike = await _context.Likes.AnyAsync(l => l.VisitorUserID == VisitorUserId && l.ItemId == id);
-
-            if (existingLike)
-            {
-                ViewBag.Liked = true;
-            }
-            else
-            {
+                Log.Information("User not logged in or invalid session data: {Error}", ex.Message);
                 ViewBag.Liked = false;
             }
 
+            // Fetch the like count for the item
+            var likeCount = await _context.ItemLikeCounts
+                .Where(ilc => ilc.ItemId == id)
+                .Select(ilc => ilc.LikeCount)
+                .FirstOrDefaultAsync();
 
-            if (like != null)
-            {
-                likeobj = like;
-            }
-
-
+            // Create the view model to pass to the view
             var itemDetailsViewModel = new ItemDetailsViewModel
             {
                 item = item,
                 collection = item.Collection,
-                visitorID = VisitorUserId,
+                visitorID = visitorUserId,
                 AuthorName = item.Collection.User.Name,
                 Tags = tags,
-                Like = likeobj,
+                Like = likeObj,
                 CommenterName = HttpContext.Session.GetString("Name"),
                 ItemLikeCount = new ItemLikeCount
                 {
                     ItemId = item.ItemId,
-                    LikeCount = await _context.ItemLikeCounts
-                    .Where(ilc => ilc.ItemId == id)
-                    .Select(ilc => ilc.LikeCount)
-                    .FirstOrDefaultAsync()
+                    LikeCount = likeCount
                 }
             };
 
             return View(itemDetailsViewModel);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Like(Models.Like like)
@@ -423,14 +416,14 @@ namespace PCM.Controllers
 
             var items = new List<Item>();
 
-            itemIds.ForEach(async e =>
+            foreach (var e in itemIds)
             {
                 var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == e.ItemId);
                 if (item != null)
                 {
                     items.Add(item);
                 }
-            });
+            }
 
             return View(items);
         }

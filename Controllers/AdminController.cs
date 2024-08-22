@@ -20,14 +20,13 @@ namespace PCM.Controllers
                 var users = await _userService.GetAllUsersAsync();
                 return View(users);
             }
-
+            // If not a admin, redirect to login page 
             return RedirectToAction("Login", "Account");
         }
 
         [HttpPost]
         public async Task<IActionResult> BlockUsers([FromBody] List<Guid> userIds)
         {
-
             if (await IsAdmin() )
             {
                 await _userService.BlockUsersAsync(userIds);
