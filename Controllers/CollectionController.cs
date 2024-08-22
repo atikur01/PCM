@@ -35,8 +35,8 @@ namespace PCM.Controllers
 
         public async Task<IActionResult>  Index()
         {
-            var sessionUserIdString = HttpContext.Session.GetString("Id");
-            if(sessionUserIdString == null) { return RedirectToAction("Login", "Account"); }
+            var userid = HttpContext.Session.GetString("Id");
+            if(userid == null) { return RedirectToAction("Login", "Account"); }
 
             if (await IsAdmin()) 
             {
