@@ -19,7 +19,6 @@ namespace PCM.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(string email, string password, string Name)
         {
-
             if (ModelState.IsValid)
             {
                 var user = await _userService.RegisterUserAsync(email, password, Name);

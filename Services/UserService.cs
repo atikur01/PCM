@@ -85,7 +85,6 @@ namespace PCM.Services
         }
 
 
-
         public async Task BlockUsersAsync(List<Guid> userIds)
         {
             var users = await _context.Users.Where(u => userIds.Contains(u.UserId)).ToListAsync();
@@ -136,14 +135,14 @@ namespace PCM.Services
 
         public async Task LogoutAsync(Guid id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+           User? user = await GetUserByIdAsync(id);
 
-            user.IsActive = false;
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            await _context.SaveChangesAsync();
-
+            if (user != null)
+            {
+                user.IsActive = false;
+                _context.Entry(user).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<User?> GetUserByIdAsync(Guid id)
@@ -184,10 +183,6 @@ namespace PCM.Services
             }
   
         }
-
-        
-
-
 
     }
 }
