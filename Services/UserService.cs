@@ -45,12 +45,17 @@ namespace PCM.Services
 
         public async Task<User> AuthenticateUserAsync(string Email, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email);
+            var user = await GetUserByEmailAsync(Email);
 
             if(user == null)
             {
                 return null;
-            }   
+            }
+            
+            if(!VerifyPassword(password, user.PasswordHash))
+            {
+                return null;
+            }
 
             user.IsActive = true;
 
