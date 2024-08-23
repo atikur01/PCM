@@ -6,7 +6,7 @@ namespace PCM.ElasticSearchModels
     [ElasticsearchType(RelationName = "collection")]
     public class EsCollection
     {
-
+        //Keyword fields are not analyzed in ElasticSearch
         [Keyword(Name = "collection_id")]
         public Guid CollectionId { get; set; }
 
@@ -16,6 +16,7 @@ namespace PCM.ElasticSearchModels
         [Ignore]
         public User? User { get; set; }
 
+        //Text fields are analyzed in ElasticSearch
         [Text(Name = "name")]
         public string? Name { get; set; }
 
@@ -80,6 +81,7 @@ namespace PCM.ElasticSearchModels
         [Text(Name = "custom_date3_name")]
         public string? CustomDate3Name { get; set; }
 
+        //Maintain relationships between sub-objects 
         [Nested(Name = "items")]
         public List<Item>? Items { get; set; }
     }

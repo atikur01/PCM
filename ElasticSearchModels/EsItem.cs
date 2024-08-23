@@ -8,7 +8,6 @@ namespace PCM.ElasticSearchModels
     public class EsItem
     {
         [Keyword(Name = "item_id")]
-
         public Guid ItemId { get; set; }
 
         [Keyword(Name = "collection_id")]
