@@ -5,6 +5,7 @@
 }
 
 
+
 <div class="container mt-5">
     <h2 class="mb-4">Search Results for "@Model.Keyword"</h2>
 
@@ -16,13 +17,12 @@
 
     <div class="row">
 
-        
-
         @if (Model.Items.Count == 0)
         {
             <div class="col">
                 <p>No items found.</p>
             </div>
+
         }
         else
         {
@@ -46,28 +46,26 @@
 
     </div>
 
-
-    
-    <div class="row mb-4">
-        <div class="col">
-            <h2>Collections : </h2>
+    @if(Model.Items.Count == 0 && Model.Collections.Count > 0 )
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <h2>Collections : </h2>
+            </div>
         </div>
-    </div>
-
-
+    }
+   
 
     <div class="row">
-
-        @if (Model.Collections.Count == 0)
+         
+        @if (Model.Collections.Count == 0  )
         {
             <div class="col">
                 <p>No collections found.</p>
             </div>
         }
-        else
+        else if(Model.Items.Count == 0 )
         {
-            
-
             foreach (var collection in Model.Collections)
             {
                 <div class="col-md-4 mb-4">
@@ -83,20 +81,7 @@
             }
 
         }
-
-
-
-
     </div>
-
-
-
-
-
-
-
-
-
 
 </div>
 
