@@ -4,13 +4,23 @@ namespace PCM.Hubs
 {
     public class CommentHub : Hub
     {
-        // This method allows a client to send a comment to all connected clients.
-        public async Task SendComment(string user, string message)
+        // Method to send a comment to all clients connected to a specific item group (identified by itemId)
+        public async Task SendComment(Guid itemId, string user, string message)
         {
-            // The Clients.All.SendAsync method sends the received comment to all connected clients.
-            // "ReceiveComment" is the name of the client-side method that will handle the comment.
-            // The parameters `user` and `message` are passed along to the clients.
-            await Clients.All.SendAsync("ReceiveComment", user, message);
+            // Send the comment only to clients in the group associated with the specific itemId (GUID).
+            await Clients.Group($"Item-{itemId}").SendAsync("ReceiveComment", itemId, user, message);
+        }
+
+        // Method to allow a client to join a group based on the itemId
+        public async Task JoinGroup(string groupName)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+        }
+
+        // Method to allow a client to leave a group based on the itemId
+        public async Task LeaveGroup(string groupName)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
         }
     }
 }

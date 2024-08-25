@@ -179,8 +179,8 @@
 
                     <div class="container mt-5">
                         <h4>Comments</h4>
-                        <div id="commentsList" class="list-group">
-                            <!-- Comments will be dynamically added here -->
+                        <div id="commentsList-@Model.item.ItemId" class="list-group">
+                            <!-- Existing comments will be loaded here -->
                         </div>
 
                         @if(Model.CommenterName == null)
@@ -192,8 +192,11 @@
                         else
                         {
                             <div class="mt-3">
+
                                 <textarea id="commentMessage" class="form-control mt-2" placeholder="Your comment"></textarea>
                                 <button id="sendComment" class="btn btn-primary mt-2">Add Comment</button>
+                                
+
                             </div>
                         }
 
@@ -210,37 +213,7 @@
 
 @section Scripts
 {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            $('#like-button').click(function () {
-                var button = $(this);
-
-                $.ajax({
-                    url: '@Url.Action("Like", "Item")',
-                    type: 'POST',
-                    data: {
-                        ItemId: '@Model.item.ItemId',
-                        VisitorUserID: '@ViewBag.VisitorUserId'
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            $('#like-count').text(response.likeCount);
-                            button.prop('disabled', true);
-                            button.removeClass('btn-outline-primary').addClass('btn-primary');
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("An error occurred while processing your request.");
-                    }
-                });
-            });
-        });
-    </script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
     <script>
         $(document).ready(function () {
             // Connect to SignalR hub
@@ -248,75 +221,75 @@
                 .withUrl("/commentHub")
                 .build();
 
-            connection.on("ReceiveComment", function (user, message) {
-                addCommentToList(user, message);
+            connection.on("ReceiveComment", function (itemId, user, message) {
+                addCommentToList(itemId, user, message);
             });
 
             connection.start().then(function () {
-                console.log("Connected to SignalR hub");
+                const itemId = '@Model.item.ItemId'; // Assuming this is a GUID
+                connection.invoke("JoinGroup", `Item-${itemId}`).then(function () {
+                    console.log("Joined group for item: " + itemId);
+                }).catch(function (err) {
+                    return console.error(err.toString());
+                });
             }).catch(function (err) {
                 return console.error(err.toString());
             });
 
-            // Load existing comments
-            loadComments();
+            // Load existing comments for this specific item
+            const itemId = '@Model.item.ItemId';
+            loadComments(itemId);
 
             // Handle send comment
             $("#sendComment").click(function () {
                 const userName = '@Model.CommenterName';
                 const message = $("#commentMessage").val();
 
-                 
-                    $.ajax({
-                        url: '/Comments/AddComment',
-                        type: 'POST',
-                        data: {
-                            itemid: '@Model.item.ItemId',
-                            userName: userName,
-                            message: message,
-                           visitorID : '@Model.visitorID'
-
-
-                        },
-                        success: function (response) {
-                            if (response.success) {
-                                connection.invoke("SendComment", userName, message);
-                                // Optionally, clear the input field after sending the comment
-                                 $("#commentMessage").val('');
-           
-                            } else {
-                                // Handle failure case (optional)
-                                alert('Failed to add comment: ' + response.message);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            // Handle server error or failure
-                            console.error('Error:', status, error);
-                            alert('An error occurred while sending the comment.');
+                $.ajax({
+                    url: '/Comments/AddComment',
+                    type: 'POST',
+                    data: {
+                        itemid: itemId,
+                        userName: userName,
+                        message: message,
+                        visitorID: '@Model.visitorID'
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            connection.invoke("SendComment", itemId, userName, message);
+                            // Optionally, clear the input field after sending the comment
+                            $("#commentMessage").val('');
+                        } else {
+                            // Handle failure case (optional)
+                            alert('Failed to add comment: ' + response.message);
                         }
-                    });
-                
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle server error or failure
+                        console.error('Error:', status, error);
+                        alert('An error occurred while sending the comment.');
+                    }
+                });
             });
 
-            function loadComments(itemid) {
-                $.get('/Comments/GetComments', { itemid: '@Model.item.ItemId' }, function (comments) {
+            function loadComments(itemId) {
+                $.get('/Comments/GetComments', { itemid: itemId }, function (comments) {
                     comments.forEach(comment => {
-                        addCommentToList(comment.userName, comment.message);
+                        addCommentToList(itemId, comment.userName, comment.message);
                     });
                 });
             }
 
-
-            function addCommentToList(user, message) {
+            function addCommentToList(itemId, user, message) {
                 const commentHtml = `<div class="list-group-item">
-                                        <strong>${user}</strong>
-                                        <p>${message}</p>
-                                     </div>`;
-                $("#commentsList").append(commentHtml);
+                                            <strong>${user}</strong>
+                                            <p>${message}</p>
+                                         </div>`;
+                $(`#commentsList-${itemId}`).append(commentHtml);
             }
         });
-
     </script>
+
 
 
 }
