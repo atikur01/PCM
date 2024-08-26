@@ -46,9 +46,16 @@ namespace PCM.Controllers
         public async Task<IActionResult> Login(string Email, string password)
         {
             var user = await _userService.AuthenticateUserAsync(Email, password);
+
             if (user == null)
             {
                 ModelState.AddModelError("", "Invalid login attempt.");
+                return View();
+            }
+
+            if (await _userService.IsBlocked(user.UserId))
+            {
+                ModelState.AddModelError("", "Your account is blocked.");
                 return View();
             }
 

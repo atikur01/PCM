@@ -30,6 +30,7 @@ namespace PCM.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(string keyword)
         {
             if (string.IsNullOrEmpty(keyword))

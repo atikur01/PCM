@@ -9,6 +9,8 @@ namespace PCM.Hubs
         {
             // Send the comment only to clients in the group associated with the specific itemId (GUID).
             await Clients.Group($"Item-{itemId}").SendAsync("ReceiveComment", itemId, user, message);
+            
+
         }
 
         // Method to allow a client to join a group based on the itemId
