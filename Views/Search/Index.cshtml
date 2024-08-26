@@ -58,7 +58,7 @@
 
     <div class="row">
          
-        @if (Model.Collections.Count == 0  )
+        @if ( Model.Items.Count == 0 && Model.Collections.Count == 0)
         {
             <div class="col">
                 <p>No collections found.</p>
