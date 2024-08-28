@@ -1,8 +1,6 @@
-
 using Elasticsearch.Net;
 using Microsoft.EntityFrameworkCore;
 using Nest;
-using PCM.ActionFilter;
 using PCM.Data;
 using PCM.Hubs;
 using PCM.Models;
@@ -10,6 +8,7 @@ using PCM.Services;
 using Serilog;
 using static System.Reflection.Metadata.BlobBuilder;
 using atikapps;
+using AtikApps.ActionFilters;
 
 namespace PCM
 {
@@ -24,6 +23,7 @@ namespace PCM
 
                 builder.Services.AddHttpContextAccessor();
 
+                // Configure Elasticsearch
                 var settings = new ConnectionSettings(new Uri("https://24.144.112.56:9200"))
                    .ServerCertificateValidationCallback(CertificateValidations.AllowAll)
                    .BasicAuthentication("elastic", "2yUqvTzesI9M=vqcegwx")
