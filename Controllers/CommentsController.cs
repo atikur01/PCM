@@ -14,12 +14,10 @@ namespace PCM.Controllers
     public class CommentsController : Controller
     {
         private static List<Comment> _comments = new List<Comment>();
-
         private readonly AppDbContext _context;
-
         private readonly ElasticsearchService _elasticsearchService;
-
         private  UserService _userService;
+        private readonly bool Esflag = false;
 
         public CommentsController( AppDbContext appContext, ElasticsearchService elasticsearchService, UserService userService)
         {
@@ -50,11 +48,17 @@ namespace PCM.Controllers
                 _context.Comments.Add(comment);
                 await _context.SaveChangesAsync();
 
-                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-                var mapper = config.CreateMapper();
-                EsComment target = mapper.Map<EsComment>(comment);
-                await _elasticsearchService.CreateIndexIfNotExists("comment-index");
-                var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+                if (Esflag)
+                {
+                    var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                    var mapper = config.CreateMapper();
+                    EsComment target = mapper.Map<EsComment>(comment);
+                    await _elasticsearchService.CreateIndexIfNotExists("comment-index");
+                    var result = await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+
+                }
+
+
 
                 return Ok(new { success = true, message = "Comment added successfully" });
 

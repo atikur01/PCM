@@ -3,6 +3,7 @@ using AutoMapper;
 using Azure;
 using Elastic.Clients.Elasticsearch.Nodes;
 using Markdig;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -27,8 +28,8 @@ namespace PCM.Controllers
         private readonly ElasticsearchService _elasticsearchService;
         private readonly UserService _userService;
         private CollectionService _collectionService;
-        private readonly ElasticSearchSettings _elasticSearchSettings;
-        bool isEsServerConfigured ;
+        private readonly bool Esflag = false;
+        private readonly SalesforceClient _salesforceClient;
 
         public CollectionController(
         AppDbContext context,
@@ -36,21 +37,15 @@ namespace PCM.Controllers
         ElasticsearchService elasticsearchService,
         UserService userService,
         CollectionService collectionService,
-        IOptions<ElasticSearchSettings> elasticSearchSettings)
+        SalesforceClient salesforceClient)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _cloudinaryUploader = cloudinaryUploader ?? throw new ArgumentNullException(nameof(cloudinaryUploader));
             _elasticsearchService = elasticsearchService ?? throw new ArgumentNullException(nameof(elasticsearchService));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _collectionService = collectionService ?? throw new ArgumentNullException(nameof(collectionService));
-            _elasticSearchSettings = elasticSearchSettings?.Value ?? throw new ArgumentNullException(nameof(elasticSearchSettings));
+            _salesforceClient = salesforceClient ?? throw new ArgumentNullException(nameof(salesforceClient));
 
-            isEsServerConfigured = InitializeElasticSearchSettings();
-        }
-
-        private bool InitializeElasticSearchSettings()
-        {
-            return _elasticSearchSettings.IsServerConfigured;
         }
 
         public async Task<IActionResult>  Index()
@@ -67,6 +62,8 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> IndexByUserID(Guid userid)
         {
+
+
             if (await IsAdmin() || await IsValidUserAsync(userid) )
             {
                 ViewBag.UserId = userid;
@@ -79,6 +76,66 @@ namespace PCM.Controllers
             }
 
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateSalesforceAccount()
+        {
+            var sessionUserIdString =  HttpContext.Session.GetString("Id");
+            Guid userid = Guid.Empty;
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            else { userid = Guid.Parse(sessionUserIdString);}
+
+            if (await IsAdmin() || await IsValidUserAsync(userid))
+            {
+                return View();
+            }
+
+            return RedirectToAction("Login", "Account");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateSalesforceAccount(SalesforceViewModel model)
+        {
+            var sessionUserIdString = HttpContext.Session.GetString("Id");
+            Guid userid = Guid.Empty;
+
+            if (string.IsNullOrEmpty(sessionUserIdString))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            else { userid = Guid.Parse(sessionUserIdString); }
+            if (await IsAdmin() || await IsValidUserAsync(userid))
+            {
+                if (ModelState.IsValid)
+                {
+
+                    await _salesforceClient.CreateAccountAndContactAsync(
+                        accountName: model.AccountName,
+                        contactFirstName: model.FirstName,
+                        contactLastName: model.LastName,
+                        contactEmail: model.Email
+                        );
+
+                    return RedirectToAction("Index", "Collection");
+
+                }
+                else
+                {
+                    return View(model);     
+                }
+            }
+            else
+            {
+
+               return RedirectToAction("AccessDenied", "Home");
+            }
+
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> CreateByUserID(Guid userid)
@@ -184,7 +241,7 @@ namespace PCM.Controllers
 
                 var items = await _context.Items.Where(i => i.CollectionId == id).ToListAsync();
 
-                if (isEsServerConfigured)
+                if (Esflag)
                 {
 
                     foreach (var item in items)
@@ -252,12 +309,16 @@ namespace PCM.Controllers
                     _context.Entry(collection).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
 
+                    if (Esflag)
+                    {
+                        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                        var mapper = config.CreateMapper();
+                        EsCollection target = mapper.Map<EsCollection>(collection);
+                        _elasticsearchService.Index("collection-index");
+                        var result = await _elasticsearchService.AddOrUpdate(target, target.CollectionId);
+                    }
 
-                    var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-                    var mapper = config.CreateMapper();
-                    EsCollection target = mapper.Map<EsCollection>(collection);
-                    _elasticsearchService.Index("collection-index");
-                    var result = await _elasticsearchService.AddOrUpdate(target, target.CollectionId);
+                    
                 }
                 catch (Exception ex)
                 {

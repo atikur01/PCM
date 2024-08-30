@@ -12,16 +12,13 @@ namespace PCM.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-
         private readonly AppDbContext _context;
 
-        private readonly ElasticsearchService _elasticsearchService;
-
-        public HomeController(ILogger<HomeController> logger , AppDbContext appContext, ElasticsearchService elasticsearchService)
+        public HomeController(ILogger<HomeController> logger , AppDbContext appContext)
         {
             _logger = logger;
             _context = appContext;
-            _elasticsearchService = elasticsearchService;
+
         }
 
         public async Task<IActionResult>  Index()

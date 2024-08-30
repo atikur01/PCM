@@ -22,11 +22,21 @@ namespace PCM.Controllers
     { 
         private readonly AppDbContext _context;
         private readonly ElasticsearchService _elasticsearchService;
+        private readonly bool Esflag = false;
 
         public SearchController(AppDbContext context, ElasticsearchService elasticsearchService)
         {
             _context = context;
-            _elasticsearchService = elasticsearchService;
+            if (Esflag)
+            {
+               _elasticsearchService = elasticsearchService;
+            }
+            
+        }
+
+        public IActionResult ServerStatus()
+        {
+            return View();
         }
 
 
@@ -39,101 +49,111 @@ namespace PCM.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            var itemIds = new HashSet<string>();
-            var items = new List<Item>();
-
-            var collectionIds = new HashSet<string>();
-            var collections = new List<Collection>();
-
-            var query = new SimpleQueryStringQuery
+            if (Esflag == false)
             {
-                Query = keyword,
-                DefaultOperator = Operator.And
-            };
-
-            // Search items
-            _elasticsearchService.Index("item-index");
-            var resultsItems = await _elasticsearchService.Query<dynamic>(query);
-
-            if (resultsItems != null)
-            {
-                foreach (var result in resultsItems)
-                {
-                    if (result.TryGetValue("item_id", out object itemIdValue))
-                    {
-                        var itemId = itemIdValue.ToString();
-                        itemIds.Add(itemId);
-                    }
-                }
+                return RedirectToAction("ServerStatus", "Search");
             }
-
-            // Search comments
-            _elasticsearchService.Index("comment-index");
-            var resultComments = await _elasticsearchService.Query<dynamic>(query);
-
-            if (resultComments != null)
+            else
             {
-                foreach (var result in resultComments)
-                {
-                    if (result.TryGetValue("item_id", out object itemIdValue))
-                    {
-                        var itemId = itemIdValue.ToString();
-                        itemIds.Add(itemId);
-                    }
-                }
-            }
+                var itemIds = new HashSet<string>();
+                var items = new List<Item>();
 
-            // Fetch distinct items
-            if (itemIds.Count > 0)
-            {
-                foreach (var itemId in itemIds)
-                {
-                    var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == Guid.Parse(itemId));
-                    if (item != null)
-                    {
-                        items.Add(item);
-                    }
-                }
-            }
+                var collectionIds = new HashSet<string>();
+                var collections = new List<Collection>();
 
-            // Search collections
-            _elasticsearchService.Index("collection-index");
-            var resultCollection = await _elasticsearchService.Query<dynamic>(query);
-
-            if (resultCollection != null)
-            {
-                foreach (var result in resultCollection)
+                var query = new SimpleQueryStringQuery
                 {
-                    if (result.TryGetValue("collection_id", out object collectionIdValue))
-                    {
-                        var collectionId = collectionIdValue.ToString();
-                        collectionIds.Add(collectionId);
-                    }
-                }
-            }
+                    Query = keyword,
+                    DefaultOperator = Operator.And
+                };
 
-            // Fetch distinct collections
-            if (collectionIds.Count > 0)
-            {
-                foreach (var collectionId in collectionIds)
+                // Search items
+                _elasticsearchService.Index("item-index");
+                var resultsItems = await _elasticsearchService.Query<dynamic>(query);
+
+                if (resultsItems != null)
                 {
-                    var collection = await _context.Collections.FirstOrDefaultAsync(i => i.CollectionId == Guid.Parse(collectionId));
-                    if (collection != null)
+                    foreach (var result in resultsItems)
                     {
-                        collections.Add(collection);
+                        if (result.TryGetValue("item_id", out object itemIdValue))
+                        {
+                            var itemId = itemIdValue.ToString();
+                            itemIds.Add(itemId);
+                        }
                     }
                 }
 
+                // Search comments
+                _elasticsearchService.Index("comment-index");
+                var resultComments = await _elasticsearchService.Query<dynamic>(query);
+
+                if (resultComments != null)
+                {
+                    foreach (var result in resultComments)
+                    {
+                        if (result.TryGetValue("item_id", out object itemIdValue))
+                        {
+                            var itemId = itemIdValue.ToString();
+                            itemIds.Add(itemId);
+                        }
+                    }
+                }
+
+                // Fetch distinct items
+                if (itemIds.Count > 0)
+                {
+                    foreach (var itemId in itemIds)
+                    {
+                        var item = await _context.Items.FirstOrDefaultAsync(i => i.ItemId == Guid.Parse(itemId));
+                        if (item != null)
+                        {
+                            items.Add(item);
+                        }
+                    }
+                }
+
+                // Search collections
+                _elasticsearchService.Index("collection-index");
+                var resultCollection = await _elasticsearchService.Query<dynamic>(query);
+
+                if (resultCollection != null)
+                {
+                    foreach (var result in resultCollection)
+                    {
+                        if (result.TryGetValue("collection_id", out object collectionIdValue))
+                        {
+                            var collectionId = collectionIdValue.ToString();
+                            collectionIds.Add(collectionId);
+                        }
+                    }
+                }
+
+                // Fetch distinct collections
+                if (collectionIds.Count > 0)
+                {
+                    foreach (var collectionId in collectionIds)
+                    {
+                        var collection = await _context.Collections.FirstOrDefaultAsync(i => i.CollectionId == Guid.Parse(collectionId));
+                        if (collection != null)
+                        {
+                            collections.Add(collection);
+                        }
+                    }
+
+                }
+
+                var searchResults = new SearchViewModel
+                {
+                    Items = items,
+                    Collections = collections,
+                    Keyword = keyword
+                };
+
+                return View(searchResults);
+
             }
 
-            var searchResults = new SearchViewModel
-            {
-                Items = items,
-                Collections = collections,
-                Keyword = keyword
-            };
-
-            return View(searchResults);
+            
         }
 
 

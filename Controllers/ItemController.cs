@@ -30,6 +30,7 @@ namespace PCM.Controllers
         private readonly AppDbContext _context;
         private readonly ElasticsearchService _elasticsearchService;
         private readonly UserService _userService;
+        private readonly bool Esflag = false;
 
         public ItemController(AppDbContext context, ElasticsearchService elasticsearchService, UserService userService ) 
         {
@@ -100,12 +101,16 @@ namespace PCM.Controllers
 
                 _context.Items.Add(item);
 
+                if (Esflag)
+                {
+                    var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                    var mapper = config.CreateMapper();
+                    EsItem target = mapper.Map<EsItem>(item);
+                    await _elasticsearchService.CreateIndexIfNotExists("item-index");
+                    await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+                }
 
-                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-                var mapper = config.CreateMapper();
-                EsItem target = mapper.Map<EsItem>(item);
-                await _elasticsearchService.CreateIndexIfNotExists("item-index");
-                await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+               
 
                 // Process and add tags, skipping the first tag in the list
                 ProcessTags(item);
@@ -184,11 +189,16 @@ namespace PCM.Controllers
             {
                 _context.Items.Update(item);
 
-                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-                var mapper = config.CreateMapper();
-                EsItem target = mapper.Map<EsItem>(item);
-                _elasticsearchService.Index("item-index");
-                await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+                if (Esflag)
+                {
+                    var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+                    var mapper = config.CreateMapper();
+                    EsItem target = mapper.Map<EsItem>(item);
+                    _elasticsearchService.Index("item-index");
+                    await _elasticsearchService.AddOrUpdate(target, target.ItemId);
+                }
+
+                
 
                 await _context.SaveChangesAsync();
 
@@ -224,13 +234,18 @@ namespace PCM.Controllers
 
                 _context.Items.Remove(item);
 
-                _elasticsearchService.Index("item-index");
-                await _elasticsearchService.Remove<dynamic>(id.ToString());
-
                 var tags = await _context.Tags.Where(t => t.ItemId == id).ToListAsync();
 
-                _elasticsearchService.Index("comment-index");
-                await _elasticsearchService.Remove<dynamic>(id.ToString());
+                if (Esflag)
+                {
+                    _elasticsearchService.Index("item-index");
+                    await _elasticsearchService.Remove<dynamic>(id.ToString());
+
+                    _elasticsearchService.Index("comment-index");
+                    await _elasticsearchService.Remove<dynamic>(id.ToString());
+                }
+            
+                
 
                 _context.Tags.RemoveRange(tags);
 
