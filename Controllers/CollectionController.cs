@@ -5,6 +5,7 @@ using Elastic.Clients.Elasticsearch.Nodes;
 using Markdig;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Nest;
 using PCM.AutomapperMappingProfile;
 using PCM.Data;
@@ -14,39 +15,54 @@ using PCM.Services;
 using PCM.ViewModels;
 using Serilog;
 using System;
+using System.Configuration;
 
 
 namespace PCM.Controllers
 {
     public class CollectionController : Controller
     {
-
         private readonly AppDbContext _context;
         private readonly CloudinaryUploader _cloudinaryUploader;
         private readonly ElasticsearchService _elasticsearchService;
         private readonly UserService _userService;
+        private CollectionService _collectionService;
+        private readonly ElasticSearchSettings _elasticSearchSettings;
+        bool isEsServerConfigured ;
 
-
-        public CollectionController(AppDbContext context, CloudinaryUploader cloudinaryUploader, ElasticsearchService elasticsearchService, UserService userService )
+        public CollectionController(
+        AppDbContext context,
+        CloudinaryUploader cloudinaryUploader,
+        ElasticsearchService elasticsearchService,
+        UserService userService,
+        CollectionService collectionService,
+        IOptions<ElasticSearchSettings> elasticSearchSettings)
         {
-            _context = context;
-            _cloudinaryUploader = cloudinaryUploader;
-            _elasticsearchService = elasticsearchService;
-            _userService = userService;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _cloudinaryUploader = cloudinaryUploader ?? throw new ArgumentNullException(nameof(cloudinaryUploader));
+            _elasticsearchService = elasticsearchService ?? throw new ArgumentNullException(nameof(elasticsearchService));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _collectionService = collectionService ?? throw new ArgumentNullException(nameof(collectionService));
+            _elasticSearchSettings = elasticSearchSettings?.Value ?? throw new ArgumentNullException(nameof(elasticSearchSettings));
+
+            isEsServerConfigured = InitializeElasticSearchSettings();
+        }
+
+        private bool InitializeElasticSearchSettings()
+        {
+            return _elasticSearchSettings.IsServerConfigured;
         }
 
         public async Task<IActionResult>  Index()
         {
             var userid = HttpContext.Session.GetString("Id");
             if(userid == null) { return RedirectToAction("Login", "Account"); }
-
             if (await IsAdmin()) 
             {
                 return RedirectToAction("ManageUsers", "Admin");
             }
-            //For non-admin users   
-            return RedirectToAction("IndexByUserID", new { userid = userid });
 
+            return RedirectToAction("IndexByUserID", new { userid = userid });//For non-admin users   
         }
 
         public async Task<IActionResult> IndexByUserID(Guid userid)
@@ -54,11 +70,7 @@ namespace PCM.Controllers
             if (await IsAdmin() || await IsValidUserAsync(userid) )
             {
                 ViewBag.UserId = userid;
-
-                var collections = await _context.Collections
-                .Where(c => c.UserId == userid)
-                .ToListAsync();
-
+                var collections = await _collectionService.GetByUserId(userid);
                 return View(collections);
             }
             else
@@ -68,27 +80,20 @@ namespace PCM.Controllers
 
         }
 
-
         [HttpGet]
         public async Task<IActionResult> CreateByUserID(Guid userid)
         {
-
             if (await IsAdmin() || await IsValidUserAsync(userid))
             {
                 ViewBag.UserId = userid;
-
-                var categories = await _context.Categories.ToListAsync();
-
+                var categories = await _collectionService.GetAllCategoryAsync();    
                 ViewBag.Categories = categories;
-
-
                 return View();
             }
             else
             {
                 return RedirectToAction("AccessDenied", "Home");
             }
-
         }
 
         [HttpPost]
@@ -110,15 +115,7 @@ namespace PCM.Controllers
                 collection.CreatedAt = DateTime.Now;
                 collection.TotalItems = 0;
 
-                _context.Collections.Add(collection);
-                await _context.SaveChangesAsync();
-
-                //Save to ElasticSearch
-                var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-                var mapper = config.CreateMapper();
-                EsCollection target = mapper.Map<EsCollection>(collection);
-                await _elasticsearchService.CreateIndexIfNotExists("collection-index");
-                var result = await _elasticsearchService.AddOrUpdate(target, target.CollectionId);
+                await _collectionService.AddAsync(collection);
 
                 return RedirectToAction("IndexByUserID", new { userid = collection.UserId });
             }
@@ -171,7 +168,7 @@ namespace PCM.Controllers
 
         public async Task<IActionResult> Delete(Guid id)
         {
-            Collection? collection = await _context.Collections.FirstOrDefaultAsync(c => c.CollectionId == id);
+            Collection? collection = await _collectionService.GetByIdAsync(id);
 
             if(collection == null)
             {
@@ -185,26 +182,30 @@ namespace PCM.Controllers
                     await _cloudinaryUploader.RemoveImageAsync(collection.ImageUrl);
                 }
 
-                _context.Collections.Remove(collection);
-
                 var items = await _context.Items.Where(i => i.CollectionId == id).ToListAsync();
 
-                foreach (var item in items)
+                if (isEsServerConfigured)
                 {
-                    _elasticsearchService.SetIndex("item-index");
-                    await _elasticsearchService.Remove<dynamic>(item.ItemId.ToString());
+
+                    foreach (var item in items)
+                    {
+                        _elasticsearchService.SetIndex("item-index");
+                        await _elasticsearchService.Remove<dynamic>(item.ItemId.ToString());
+                    }
+
+                    foreach (var item in items)
+                    {
+                        _elasticsearchService.SetIndex("comment-index");
+                        await _elasticsearchService.Remove<dynamic>(item.ItemId.ToString());
+                    }
+
+                    _elasticsearchService.SetIndex("collection-index");
+                    await _elasticsearchService.Remove<dynamic>(id.ToString());
                 }
 
-                foreach (var item in items)
-                {
-                    _elasticsearchService.SetIndex("comment-index");
-                    await _elasticsearchService.Remove<dynamic>(item.ItemId.ToString());
-                }
 
-                _elasticsearchService.SetIndex("collection-index");
-                await _elasticsearchService.Remove<dynamic>(id.ToString());
+                await _collectionService.DeleteAsync(id);
 
-                await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
             else

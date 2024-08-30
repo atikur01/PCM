@@ -1,14 +1,16 @@
+using atikapps;
+using AtikApps.ActionFilters;
 using Elasticsearch.Net;
 using Microsoft.EntityFrameworkCore;
 using Nest;
 using PCM.Data;
 using PCM.Hubs;
 using PCM.Models;
+using PCM.Repositories;
 using PCM.Services;
 using Serilog;
 using static System.Reflection.Metadata.BlobBuilder;
-using atikapps;
-using AtikApps.ActionFilters;
+
 
 namespace PCM
 {
@@ -83,12 +85,19 @@ namespace PCM
                 builder.Services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer("Server=167.99.127.42,1433;Database=CollectionManagement;User Id=sa;Password=67EVzrft;Trusted_Connection=False;MultipleActiveResultSets=true;Encrypt=False;"));
 
+                builder.Services.Configure<ElasticSearchSettings>(builder.Configuration.GetSection("ElasticSearch"));
+
 
                 // Register UserService as a scoped dependency
                 builder.Services.AddScoped<UserService>();
 
                 // Register CloudinaryUploader as a singleton
                 builder.Services.AddSingleton<CloudinaryUploader>();
+
+                builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
+                builder.Services.AddScoped<CollectionService>();
+
+                
 
 
                 // Add distributed memory cache and session services
