@@ -36,6 +36,8 @@
                     <a class="nav-link" asp-area="" asp-controller="Collection" asp-action="AllCollections">Collections</a>
                 </li>
 
+                
+
                 @if (sessionValue != null)
                 {
                     <li class="nav-item">
@@ -51,6 +53,10 @@
                         <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
                     </li>
                 }
+
+                <li class="nav-item" id="registerLink">
+                    <a class="nav-link" asp-area="" asp-controller="Ticket" asp-action="Create">Create support ticket</a>
+                </li>
 
 
 

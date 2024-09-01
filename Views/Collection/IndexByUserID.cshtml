@@ -17,9 +17,14 @@
 
 <h2>User's Collections</h2>
 
-<a href="/Collection/CreateByUserID?userid=@UserId" class="btn btn-primary"><i class="fas fa-plus"></i> Create New Collection</a>
+<a href="/Collection/CreateByUserID?userid=@UserId" class="btn btn-primary" target="_blank"><i class="fas fa-plus"></i> Create New Collection</a>
 
-<a href="/Collection/CreateSalesforceAccount" class="btn btn-secondary"><i class="fas fa-plus"></i> Create Salesforce Account</a>
+<a href="/Collection/CreateSalesforceAccount" class="btn btn-success" target="_blank"><i class="fas fa-plus"></i> Create Salesforce Account</a>
+
+<a asp-controller="Ticket" asp-action="ViewAllTickets" class="btn btn-info" target="_blank">
+     View All Tickets
+</a>
+
 
 <br />
 <br />

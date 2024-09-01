@@ -1,0 +1,63 @@
+﻿@model PCM.ViewModels.SupportTicketViewModel;
+@{
+    ViewData["Title"] = "Create";
+    var referringUrl = ViewBag.ReferringUrl as string;
+}
+
+
+<div class="container mt-4">
+    <h2>Create a Support Ticket</h2>
+    <form asp-action="Create" method="post">
+        <div class="form-group">
+            <label asp-for="Summary"></label>
+            <input asp-for="Summary" class="form-control" />
+            
+        </div>
+
+        <div class="form-group">
+            <label asp-for="FullName"></label>
+            <input asp-for="FullName" class="form-control" />
+
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Reported"></label>
+            <input asp-for="Reported" class="form-control" placeholder="Enter your Email" />
+           
+        </div>
+
+
+
+        <div class="form-group">
+            <label asp-for="Collection"></label>
+            <input asp-for="Collection" class="form-control" />
+            
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Link"></label>
+            <input asp-for="Link" class="form-control" value="@referringUrl" readonly />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Priority"></label>
+            <select asp-for="Priority" class="form-control">
+                <option value="High">High</option>
+                <option value="Average">Average</option>
+                <option value="Low">Low</option>
+            </select>
+
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+
+@* @section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+} *@
+

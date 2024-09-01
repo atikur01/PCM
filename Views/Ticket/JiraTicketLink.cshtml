@@ -1,0 +1,22 @@
+﻿
+@{
+    ViewData["Title"] = "JiraTicketLink";
+}
+
+@{
+    ViewBag.Title = "Jira Ticket";
+}
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Jira Ticket</h3>
+        </div>
+        <div class="card-body">
+            <p>Click the link below to view the Jira ticket:</p>
+            <a href="@ViewBag.TicketLink" class="btn btn-outline-primary" target="_blank">@ViewBag.TicketLink</a>
+        </div>
+    </div>
+</div>
+
+

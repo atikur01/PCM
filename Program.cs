@@ -9,6 +9,7 @@ using PCM.Models;
 using PCM.Repositories;
 using PCM.Services;
 using Serilog;
+using System.Configuration;
 using static System.Reflection.Metadata.BlobBuilder;
 
 namespace PCM
@@ -74,6 +75,10 @@ namespace PCM
                 builder.Services.AddScoped<CollectionService>();
 
                 builder.Services.AddHttpClient<SalesforceClient>();
+
+                // Configure the JiraConfig section
+                builder.Services.Configure<JiraConfig>(builder.Configuration.GetSection("Jira"));
+                builder.Services.AddSingleton<IJiraService, JiraService>();
 
 
                 builder.Services.AddDistributedMemoryCache();
