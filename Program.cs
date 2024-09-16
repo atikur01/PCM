@@ -67,7 +67,7 @@ namespace PCM
 
                 // Configure EF Core with SQL Server docker container
                 builder.Services.AddDbContext<AppDbContext>(options =>
-                  options.UseSqlServer("Server=167.99.127.42,1433;Database=CollectionManagement;User Id=sa;Password=67EVzrft;Trusted_Connection=False;MultipleActiveResultSets=true;Encrypt=False;"));
+                  options.UseSqlServer("Server=sql.bsite.net\\MSSQL2016;Database=coc13259_;User Id=coc13259_;Password=A@a11223344!;Trusted_Connection=False;TrustServerCertificate=True;"));
 
                 builder.Services.AddScoped<UserService>();
                 builder.Services.AddSingleton<CloudinaryUploader>();
