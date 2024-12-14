@@ -2,7 +2,7 @@
 
 It's a pet project, which was done as a requirement of [Itransition](https://www.itransition.com) internship, that includes all basic to advanced features of a **_personal collections showcasing platform_**. \
 Build with - .NET 8 (MVC), Entity Framework\
-The live project can be found [here]([https://arbitrary-collection-mgmt.azurewebsites.net](https://pcm-v8qv.onrender.com/)/).
+The live project can be found [here](https://pcm-v8qv.onrender.com/).
 
 > A few features include:
 1. EAV model where registered users/admins can create a collection with an infinite number of attributes of multiple types that are available across all items belonging to that collection.
